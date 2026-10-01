@@ -15,3 +15,5 @@ docker-compose.yml
 .vercel
 /nul
 .env.test
+
+dist

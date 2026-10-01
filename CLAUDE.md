@@ -21,6 +21,7 @@
 | [7-erd.md](docs/7-erd.md) | ERD (데이터 모델) |
 | [schema.sql](docs/schema.sql) | 데이터베이스 DDL (PostgreSQL 17) |
 | [8-plan.md](docs/8-plan.md) | 작업 실행 계획 (WBS) |
+| [9-style-guide.md](docs/9-style-guide.md) | 프론트엔드 스타일 가이드 |
 | [swagger.yaml](backend/swagger.yaml) | REST API 명세 (OpenAPI 3.0) |
 
 ## 코딩 행동 지침

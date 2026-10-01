@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 888" width="960" height="888" font-family="-apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif">
+<title>WF-05 할일 조회 - 캘린더 탭 (스타일 가이드 적용)</title>
+<rect width="960" height="888" fill="#ffffff"/>
+<text x="40.0" y="39.0" font-size="20" font-weight="700" fill="#1a1a1a" text-anchor="start">cal-todo</text>
+<text x="170.0" y="38.0" font-size="16" font-weight="600" fill="#5b4fe9" text-anchor="start">할일</text>
+<text x="230.0" y="38.0" font-size="16" font-weight="400" fill="#1a1a1a" text-anchor="start">카테고리</text>
+<text x="316.0" y="38.0" font-size="16" font-weight="400" fill="#1a1a1a" text-anchor="start">내 정보</text>
+<text x="920.0" y="38.0" font-size="16" font-weight="400" fill="#1a1a1a" text-anchor="end">로그아웃</text>
+<line x1="0" y1="64.5" x2="960" y2="64.5" stroke="#ebebeb"/>
+<text x="40.0" y="101.0" font-size="16" font-weight="400" fill="#a0a0a0" text-anchor="start">목록</text>
+<text x="104.0" y="101.0" font-size="16" font-weight="700" fill="#1a1a1a" text-anchor="start">캘린더</text>
+<rect x="104" y="117" width="48" height="2" fill="#5b4fe9"/>
+<line x1="40" y1="119.5" x2="920" y2="119.5" stroke="#ebebeb"/>
+<rect x="800" y="76" width="120" height="36" rx="6" fill="#5b4fe9"/>
+<text x="860.0" y="99.0" font-size="15" font-weight="600" fill="#ffffff" text-anchor="middle">+ 할일 등록</text>
+<text x="480.0" y="168.0" font-size="26" font-weight="700" fill="#1a1a1a" text-anchor="middle">2026. 10.</text>
+<text x="380.0" y="166.0" font-size="26" font-weight="400" fill="#666666" text-anchor="middle">‹</text>
+<text x="580.0" y="166.0" font-size="26" font-weight="400" fill="#666666" text-anchor="middle">›</text>
+<text x="102.9" y="204.0" font-size="14" font-weight="400" fill="#e5483d" text-anchor="middle">일</text>
+<text x="228.6" y="204.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle">월</text>
+<text x="354.3" y="204.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle">화</text>
+<text x="480.0" y="204.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle">수</text>
+<text x="605.7" y="204.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle">목</text>
+<text x="731.4" y="204.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle">금</text>
+<text x="857.1" y="204.0" font-size="14" font-weight="400" fill="#4a6cf7" text-anchor="middle">토</text>
+<line x1="40" y1="216.5" x2="920" y2="216.5" stroke="#ebebeb"/>
+<text x="102.9" y="241.0" font-size="14" font-weight="400" fill="#a0a0a0" text-anchor="middle" style="font-variant-numeric:tabular-nums">27</text>
+<rect x="44.0" y="256" width="117.7" height="20" rx="2" fill="#fde8e8"/>
+<text x="50.0" y="271.0" font-size="13" font-weight="400" fill="#e5483d" text-anchor="start">A4 견적서 제출</text>
+<rect x="44.0" y="280" width="117.7" height="20" rx="2" fill="#f6f6f6"/>
+<text x="50.0" y="295.0" font-size="13" font-weight="400" fill="#a0a0a0" text-anchor="start" text-decoration="line-through">A5 독서 모임</text>
+<text x="228.6" y="241.0" font-size="14" font-weight="400" fill="#a0a0a0" text-anchor="middle" style="font-variant-numeric:tabular-nums">28</text>
+<rect x="169.7" y="256" width="117.7" height="20" rx="2" fill="#fde8e8"/>
+<text x="175.7" y="271.0" font-size="13" font-weight="400" fill="#e5483d" text-anchor="start">A4 견적서 제출</text>
+<rect x="169.7" y="280" width="117.7" height="20" rx="2" fill="#f6f6f6"/>
+<text x="175.7" y="295.0" font-size="13" font-weight="400" fill="#a0a0a0" text-anchor="start" text-decoration="line-through">A5 독서 모임</text>
+<text x="354.3" y="241.0" font-size="14" font-weight="400" fill="#a0a0a0" text-anchor="middle" style="font-variant-numeric:tabular-nums">29</text>
+<rect x="295.4" y="256" width="117.7" height="20" rx="2" fill="#fde8e8"/>
+<text x="301.4" y="271.0" font-size="13" font-weight="400" fill="#e5483d" text-anchor="start">A4 견적서 제출</text>
+<rect x="295.4" y="280" width="117.7" height="20" rx="2" fill="#f6f6f6"/>
+<text x="301.4" y="295.0" font-size="13" font-weight="400" fill="#a0a0a0" text-anchor="start" text-decoration="line-through">A5 독서 모임</text>
+<rect x="295.4" y="304" width="117.7" height="20" rx="2" fill="#eeecfd"/>
+<text x="301.4" y="319.0" font-size="13" font-weight="400" fill="#5b4fe9" text-anchor="start">A3 운동 계획</text>
+<text x="480.0" y="241.0" font-size="14" font-weight="400" fill="#a0a0a0" text-anchor="middle" style="font-variant-numeric:tabular-nums">30</text>
+<rect x="421.1" y="256" width="117.7" height="20" rx="2" fill="#fde8e8"/>
+<text x="427.1" y="271.0" font-size="13" font-weight="400" fill="#e5483d" text-anchor="start">A4 견적서 제출</text>
+<rect x="421.1" y="280" width="117.7" height="20" rx="2" fill="#f6f6f6"/>
+<text x="427.1" y="295.0" font-size="13" font-weight="400" fill="#a0a0a0" text-anchor="start" text-decoration="line-through">A5 독서 모임</text>
+<rect x="421.1" y="304" width="117.7" height="20" rx="2" fill="#eeecfd"/>
+<text x="427.1" y="319.0" font-size="13" font-weight="400" fill="#5b4fe9" text-anchor="start">A3 운동 계획</text>
+<rect x="542.9" y="217" width="125.7" height="119" fill="#f6f6f6"/>
+<circle cx="605.7" cy="236" r="12" fill="#111111"/>
+<text x="605.7" y="241.0" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle" style="font-variant-numeric:tabular-nums">1</text>
+<rect x="546.9" y="256" width="117.7" height="20" rx="2" fill="#eeecfd"/>
+<text x="552.9" y="271.0" font-size="13" font-weight="400" fill="#5b4fe9" text-anchor="start">A3 운동 계획</text>
+<rect x="546.9" y="280" width="117.7" height="20" rx="2" fill="#eeecfd"/>
+<text x="552.9" y="295.0" font-size="13" font-weight="400" fill="#5b4fe9" text-anchor="start">A2 회의 준비</text>
+<rect x="546.9" y="304" width="117.7" height="20" rx="2" fill="#eeecfd"/>
+<text x="552.9" y="319.0" font-size="13" font-weight="400" fill="#5b4fe9" text-anchor="start">A6 장보기</text>
+<text x="731.4" y="241.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">2</text>
+<rect x="672.6" y="256" width="117.7" height="20" rx="2" fill="#eeecfd"/>
+<text x="678.6" y="271.0" font-size="13" font-weight="400" fill="#5b4fe9" text-anchor="start">A2 회의 준비</text>
+<text x="857.1" y="241.0" font-size="14" font-weight="400" fill="#4a6cf7" text-anchor="middle" style="font-variant-numeric:tabular-nums">3</text>
+<rect x="798.3" y="256" width="117.7" height="20" rx="2" fill="#eeecfd"/>
+<text x="804.3" y="271.0" font-size="13" font-weight="400" fill="#5b4fe9" text-anchor="start">A2 회의 준비</text>
+<line x1="40" y1="336.5" x2="920" y2="336.5" stroke="#ebebeb"/>
+<text x="102.9" y="361.0" font-size="14" font-weight="400" fill="#e5483d" text-anchor="middle" style="font-variant-numeric:tabular-nums">4</text>
+<rect x="44.0" y="376" width="117.7" height="20" rx="2" fill="#f1f1f1"/>
+<text x="50.0" y="391.0" font-size="13" font-weight="400" fill="#666666" text-anchor="start">A1 기획서 검토</text>
+<text x="228.6" y="361.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">5</text>
+<rect x="169.7" y="376" width="117.7" height="20" rx="2" fill="#f1f1f1"/>
+<text x="175.7" y="391.0" font-size="13" font-weight="400" fill="#666666" text-anchor="start">A1 기획서 검토</text>
+<text x="354.3" y="361.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">6</text>
+<rect x="295.4" y="376" width="117.7" height="20" rx="2" fill="#f1f1f1"/>
+<text x="301.4" y="391.0" font-size="13" font-weight="400" fill="#666666" text-anchor="start">A1 기획서 검토</text>
+<text x="480.0" y="361.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">7</text>
+<text x="605.7" y="361.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">8</text>
+<text x="731.4" y="361.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">9</text>
+<text x="857.1" y="361.0" font-size="14" font-weight="400" fill="#4a6cf7" text-anchor="middle" style="font-variant-numeric:tabular-nums">10</text>
+<line x1="40" y1="456.5" x2="920" y2="456.5" stroke="#ebebeb"/>
+<text x="102.9" y="481.0" font-size="14" font-weight="400" fill="#e5483d" text-anchor="middle" style="font-variant-numeric:tabular-nums">11</text>
+<text x="228.6" y="481.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">12</text>
+<text x="354.3" y="481.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">13</text>
+<text x="480.0" y="481.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">14</text>
+<text x="605.7" y="481.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">15</text>
+<text x="731.4" y="481.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">16</text>
+<text x="857.1" y="481.0" font-size="14" font-weight="400" fill="#4a6cf7" text-anchor="middle" style="font-variant-numeric:tabular-nums">17</text>
+<line x1="40" y1="576.5" x2="920" y2="576.5" stroke="#ebebeb"/>
+<text x="102.9" y="601.0" font-size="14" font-weight="400" fill="#e5483d" text-anchor="middle" style="font-variant-numeric:tabular-nums">18</text>
+<text x="228.6" y="601.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">19</text>
+<text x="354.3" y="601.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">20</text>
+<text x="480.0" y="601.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">21</text>
+<text x="605.7" y="601.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">22</text>
+<text x="731.4" y="601.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">23</text>
+<text x="857.1" y="601.0" font-size="14" font-weight="400" fill="#4a6cf7" text-anchor="middle" style="font-variant-numeric:tabular-nums">24</text>
+<line x1="40" y1="696.5" x2="920" y2="696.5" stroke="#ebebeb"/>
+<text x="102.9" y="721.0" font-size="14" font-weight="400" fill="#e5483d" text-anchor="middle" style="font-variant-numeric:tabular-nums">25</text>
+<text x="228.6" y="721.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">26</text>
+<text x="354.3" y="721.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">27</text>
+<text x="480.0" y="721.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">28</text>
+<text x="605.7" y="721.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">29</text>
+<text x="731.4" y="721.0" font-size="14" font-weight="400" fill="#1a1a1a" text-anchor="middle" style="font-variant-numeric:tabular-nums">30</text>
+<text x="857.1" y="721.0" font-size="14" font-weight="400" fill="#4a6cf7" text-anchor="middle" style="font-variant-numeric:tabular-nums">31</text>
+<line x1="40" y1="816.5" x2="920" y2="816.5" stroke="#ebebeb"/>
+<text x="40.0" y="860.0" font-size="12" font-weight="400" fill="#666666" text-anchor="start">상태</text>
+<rect x="84" y="845" width="68" height="20" rx="2" fill="#f1f1f1"/>
+<text x="92.0" y="860.0" font-size="13" font-weight="400" fill="#666666" text-anchor="start">시작 전</text>
+<rect x="160" y="845" width="55" height="20" rx="2" fill="#eeecfd"/>
+<text x="168.0" y="860.0" font-size="13" font-weight="400" fill="#5b4fe9" text-anchor="start">진행중</text>
+<rect x="223" y="845" width="42" height="20" rx="2" fill="#f6f6f6"/>
+<text x="231.0" y="860.0" font-size="13" font-weight="400" fill="#a0a0a0" text-anchor="start" text-decoration="line-through">완료</text>
+<rect x="273" y="845" width="81" height="20" rx="2" fill="#fde8e8"/>
+<text x="281.0" y="860.0" font-size="13" font-weight="400" fill="#e5483d" text-anchor="start">기한 초과</text>
+<text x="920.0" y="860.0" font-size="12" font-weight="400" fill="#a0a0a0" text-anchor="end">오늘 D = 2026-10-01 (KST) · 공통 테스트 데이터 TODO-A1~A6 · 칩 클릭 동작 없음</text>
+</svg>

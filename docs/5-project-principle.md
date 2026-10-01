@@ -51,7 +51,7 @@ pages  →  components  →  hooks(TanStack Query)  →  api  →  (fetch)
 | components | 표시 전용 UI. 서버 호출 금지, props로만 데이터 수신 |
 | hooks | TanStack Query `useQuery`/`useMutation` 래핑. 서버 상태의 유일한 창구 |
 | api | 백엔드 REST 호출 함수와 요청/응답 타입. 토큰 첨부·재발급 처리 |
-| stores | Zustand. 서버와 무관한 UI 상태만 (필터 선택값, 활성 탭, 현재 월 등) |
+| stores | Zustand. 서버와 무관한 UI 상태만 (필터 선택값, 활성 탭, 현재 월, 언어, 테마 등) |
 
 - 상태 구분(PRD §6): 서버 데이터는 TanStack Query만, UI 상태는 Zustand만 사용한다. 서버 데이터를 Zustand에 복사하지 않는다. (이유: 캐시 이중화 방지)
 - 금지: components에서 `api` 직접 import, `api`에서 store/컴포넌트 import, 페이지 간 import.
@@ -82,7 +82,7 @@ pages  →  components  →  hooks(TanStack Query)  →  api  →  (fetch)
 | 완료 처리 | `PATCH /api/todos/:id`의 `isCompleted` (토글, 되돌림 가능) | BR-12 |
 | JSON 필드 | camelCase | `startDate`, `endDate`, `isCompleted`, `categoryId` |
 | 날짜 값 | `YYYY-MM-DD` | `2026-10-07` |
-| 상태 값 | 영문 소문자 코드: `upcoming`(시작 전), `in_progress`(진행중), `completed`(완료), `overdue`(기한 초과) | 한글 표시는 프론트 상수 한 곳에서 매핑 |
+| 상태 값 | 영문 소문자 코드: `upcoming`(시작 전), `in_progress`(진행중), `completed`(완료), `overdue`(기한 초과) | 화면 표시 라벨(한국어·영어)은 `i18n.ts` 한 곳에서 매핑 |
 | DB 테이블 | snake_case 복수형 | `users`, `categories`, `todos` |
 | DB 컬럼 | snake_case | `user_id`, `category_id`, `start_date`, `end_date`, `is_completed`, `created_at` |
 | DB PK/FK | PK는 `id`, FK는 `<단수 테이블>_id` | `todos.user_id → users.id` |
@@ -181,6 +181,8 @@ frontend/
 │  │  ├─ TodoFormPage.tsx         # WF-06 할일 등록·수정 (FR-03, FR-04)
 │  │  └─ CategoryPage.tsx         # WF-07 카테고리 관리 (FR-08)
 │  ├─ components/                 # props만 받는 표시 전용 UI
+│  │  ├─ LanguageSelect.tsx       # 언어 선택(한국어/English)
+│  │  ├─ ThemeToggle.tsx          # 다크/라이트 모드 전환 버튼
 │  │  ├─ Header.tsx               # 공통 헤더(WF-03~07 이동, 로그아웃)
 │  │  ├─ TodoItem.tsx             # 할일 행/카드, 상태 라벨
 │  │  ├─ TodoFilters.tsx          # 카테고리·상태 필터 (FR-07)
@@ -190,20 +192,23 @@ frontend/
 │  │  ├─ useTodos.ts              # 할일 조회·등록·수정·삭제 (FR-03~07)
 │  │  └─ useCategories.ts         # 카테고리 CRUD (FR-08)
 │  ├─ stores/                     # Zustand (UI 상태만)
-│  │  └─ uiStore.ts               # 활성 탭, 필터 선택값, 캘린더 현재 월
+│  │  └─ uiStore.ts               # 활성 탭, 필터 선택값, 캘린더 현재 월, 언어, 테마(언어·테마만 localStorage 유지)
 │  ├─ api/                        # REST 호출·토큰 처리·응답 타입
 │  │  ├─ client.ts                # fetch 래퍼, 토큰 첨부·재발급, 만료 시 로그인 이동
 │  │  ├─ types.ts                 # Todo, Category, User, TodoStatus 타입
 │  │  ├─ authApi.ts               # /api/auth/*, /api/users/me
 │  │  ├─ todoApi.ts               # /api/todos
 │  │  └─ categoryApi.ts           # /api/categories
-│  └─ constants.ts                # 상태 코드 → 한글 라벨 매핑 등
+│  ├─ i18n.ts                     # 다국어 사전(ko, en)·useT(): 화면 문구, 상태 라벨, error.code → 문구
+│  └─ constants.ts                # '기본' 카테고리 이름 상수
 ├─ .env.example                   # 프론트 환경변수 키 목록
 ├─ package.json
 └─ tsconfig.json
 ```
 
-- 테스트 파일은 대상 파일 옆 `*.test.tsx`(`*.test.ts`)에 두고 러너는 Vitest + Testing Library다.
+- 테스트 파일은 대상 파일 옆 `*.test.tsx`(`*.test.ts`)에 두고 러너는 Vitest + Testing Library다. (`pages/TodoFormPage.test.tsx`, `stores/uiStore.test.ts`, `i18n.test.ts`, `theme.test.tsx`)
+- 다국어: 컴포넌트는 `useT()`로 현재 언어 사전을 받는다. props만 받는 컴포넌트(`TodoItem`, `TodoFilters`)는 사전을 props로 받는다. 서버 오류는 한국어에서 서버 `message`를 그대로, 영어에서 `error.code`로 번역한다(모르는 code는 원문). 사용자 데이터는 번역하지 않되, '기본' 카테고리는 영어에서 표시만 'Default'로 바꾼다(식별은 이름 '기본' 그대로, BR-10).
+- 테마: `App.tsx`가 `uiStore.theme`을 `<html data-theme>`에 반영하고, `index.css`의 `:root[data-theme='dark']`가 같은 색 토큰을 다시 정의한다. 컴포넌트와 CSS 규칙은 색 값 대신 토큰만 참조한다(스타일 가이드 §2.4).
 - 캘린더 탭은 WF-04와 같은 화면의 탭이므로 `TodoListPage`가 탭을 전환하며 `TodoCalendarView`를 렌더링한다.
 
 ### 6.2 백엔드
@@ -280,6 +285,8 @@ backend/
 | 저장소 내 `frontend/`·`backend/`와 기존 `team-caltalk/` 폴더의 관계 | 루트에 새로 만들고 `team-caltalk/`는 수정하지 않음 |
 | 삭제 확인 절차, 빈 결과 표시, 내 정보 수정 항목 범위 | 삭제 전 `window.confirm` 1회, "조건에 맞는 할일이 없습니다.", 이름만 수정 |
 | 이메일 대소문자 | 서비스에서 공백 제거·소문자 정규화(BR-07) |
+| 다국어 | 한국어(기본)·영어, 라이브러리 없이 `i18n.ts` 사전 + `uiStore.lang`(localStorage 유지, 초기값 브라우저 언어). 서버 오류는 `error.code`로 번역, 백엔드 변경 없음 (8-plan FE-15) |
+| 다크/라이트 모드 | 라이브러리 없이 CSS 토큰 재정의(`:root[data-theme='dark']`) + `uiStore.theme`(localStorage 유지, 초기값 OS 설정 `prefers-color-scheme`). 백엔드 변경 없음 (8-plan FE-16) |
 
 ## 8. 문서 변경 이력
 
@@ -291,3 +298,5 @@ backend/
 | 1.3 | 2026-09-30 | leejs05031119@gmail.com | 문서 정합성 점검: 1-1의 "남은 미정 항목(§7)" 참조 제거(§7은 결정 사항), services BR 목록에 BR-03 추가, §3 인덱스에 `todos.category_id` 추가(schema.sql 인덱스 2개와 일치), §6.2 테스트 파일 주석을 8-plan Task와 일치(auth S-03, categories E-10, todos E-06) |
 | 1.4 | 2026-09-30 | leejs05031119@gmail.com | error.code 값 7종 확정(§3 표) |
 | 1.5 | 2026-10-01 | leejs05031119@gmail.com | 백엔드 구현 반영: Swagger UI(`/api-docs`, 개발 환경만)와 선택 키 `NODE_ENV`(§5.1·5.2·5.6), 백엔드 커버리지 90% 기준(4-9), §6.2에 `docsRoutes.js`·테스트 파일 4개·`swagger.yaml`·`.env.test` 추가, §7 갱신 |
+| 1.6 | 2026-10-01 | leejs05031119@gmail.com | 다국어 반영: 상태 라벨 매핑 위치를 `i18n.ts`로 변경(§3), stores에 언어 추가(§2.2), §6.1에 `i18n.ts`·`LanguageSelect.tsx`·테스트 파일 추가, §7 결정 추가 |
+| 1.7 | 2026-10-01 | leejs05031119@gmail.com | 다크/라이트 모드 반영: stores에 테마 추가(§2.2), §6.1에 `ThemeToggle.tsx`·`theme.test.tsx`와 테마 적용 방식 추가, §7 결정 추가 |
