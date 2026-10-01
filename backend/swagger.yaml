@@ -14,7 +14,7 @@ servers:
     description: 로컬 개발 서버
     variables:
       port:
-        default: PORT
+        default: '3000'
         description: PORT 환경변수
 
 tags:

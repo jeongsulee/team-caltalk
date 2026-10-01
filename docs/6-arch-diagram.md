@@ -4,7 +4,7 @@
 
 ## 1. 전체 기술 아키텍처
 
-브라우저(React) → Express(routes → services → repositories) → pg → PostgreSQL 17 순으로 요청이 흐른다. 인증 미들웨어는 routes 앞단에서 Access Token을 검증한다(공개 API는 `/api/auth/*`뿐).
+브라우저(React) → Express(routes → services → repositories) → pg → PostgreSQL 17 순으로 요청이 흐른다. 인증 미들웨어는 routes 앞단에서 Access Token을 검증한다(공개 API는 `/api/auth/*`뿐). 개발 환경에서는 `backend/swagger.yaml`을 `/api-docs` Swagger UI로 함께 제공한다(`NODE_ENV=production`이면 미등록, 5-project-principle §5.6).
 
 ```mermaid
 flowchart LR
@@ -88,6 +88,7 @@ flowchart TD
 | 배포 환경, 로깅·모니터링 | 이번 범위 외 |
 | 타인 리소스 접근 거부 시 HTTP 상태 코드 | 404 |
 | 캘린더 탭 조회 API | 전용 API 없이 필터 없는 `GET /api/todos` |
+| API 문서 | `/api-docs` Swagger UI(CDN 로드), 개발 환경만 |
 | 프론트 빌드 도구·라우터 라이브러리 | Vite, react-router |
 | 저장소 내 `frontend/`·`backend/`와 기존 `team-caltalk/` 폴더의 관계 | 루트에 새로 만들고 `team-caltalk/`는 수정하지 않음 |
 
@@ -99,3 +100,4 @@ flowchart TD
 | 1.1 | 2026-09-30 | leejs05031119@gmail.com | ERD(데이터 모델) 추가 |
 | 1.2 | 2026-09-30 | leejs05031119@gmail.com | ERD 삭제 (별도 문서로 작성 예정) |
 | 1.3 | 2026-09-30 | leejs05031119@gmail.com | 8-plan §5 미정 항목 결정 반영 |
+| 1.4 | 2026-10-01 | leejs05031119@gmail.com | Swagger UI(`/api-docs`, 개발 환경만) 반영 |

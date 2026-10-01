@@ -117,7 +117,7 @@ pages  →  components  →  hooks(TanStack Query)  →  api  →  (fetch)
 | 4-6 | 기본값 테스트: BR-03(E-04, 카테고리 미지정 → '기본'), BR-09(E-09, '업무' 삭제 후 TODO-A1·A2·A4가 '기본'으로 이동하고 삭제되지 않음). BR-05(시작일 기본값 D+7, 종료일=시작일)는 프론트 폼 초기값 테스트로 검증한다. | 문서에 명시된 기본 동작. |
 | 4-7 | 미정 항목은 테스트로 기대 결과를 고정하지 않는다. 테스트 파일에 `// 미정` 주석 또는 `todo` 케이스로만 남긴다. 결정으로 바뀐 항목(E-10 등)은 테스트 대상이다. | 미정을 테스트가 결정해 버리는 것을 방지. |
 | 4-8 | 테스트 범위: 백엔드는 상태 판단·서비스 규칙·API 통합(실제 PostgreSQL 테스트 DB), 프론트는 폼 검증(BR-04 오류 표시)·필터 상태 전환 위주. 나머지 화면 렌더링 테스트는 만들지 않는다. | 2일 일정에서 위험이 큰 곳에 집중. |
-| 4-9 | 테스트 러너는 백엔드 `node --test`, 프론트 Vitest + Testing Library. 커버리지 수치 목표는 없다. | 확정(§7). |
+| 4-9 | 테스트 러너는 백엔드 `node --test`, 프론트 Vitest + Testing Library. 백엔드는 `npm run test:coverage`에서 `src/` 라인 커버리지 90% 미만이면 실패한다. 프론트는 커버리지 수치 목표가 없다. | 확정(§7). |
 | 4-10 | 접근성 검증은 하지 않는다(PRD §8). | 범위 제외. |
 
 ## 5. 설정/보안/운영 원칙
@@ -126,13 +126,15 @@ pages  →  components  →  hooks(TanStack Query)  →  api  →  (fetch)
 - 설정값은 환경변수로만 주입하고 코드·저장소에 비밀값을 넣지 않는다. `.env`는 `.gitignore`에 포함하고, 키 목록만 `.env.example`에 둔다. (이유: 비밀 유출 방지)
 - 백엔드 필수 키: `DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRES_IN`(`15m`), `JWT_REFRESH_EXPIRES_IN`(`7d`), `DB_POOL_MAX`(`20`), `PORT`, `CORS_ORIGIN`. 괄호 값은 `.env.example` 예시다.
 - 프론트 키: `VITE_API_BASE_URL` (빌드 도구 Vite). 프론트에는 비밀값을 두지 않는다.
+- 백엔드 선택 키: `NODE_ENV`. `production`이면 API 문서(`/api-docs`, §5.6)를 등록하지 않는다. 필수 키가 아니므로 `.env.example`에는 두지 않는다.
 - 시작 시 필수 키가 없으면 서버를 기동하지 않는다.
+- 백엔드 테스트는 `.env.test`를 쓰며, `DATABASE_URL`의 DB 이름이 `_test`로 끝나지 않으면 테스트 픽스처가 실행을 거부한다(시드가 TRUNCATE하므로).
 
 ### 5.2 인증 (JWT: Access Token + Refresh Token)
 - 로그인 성공 시 두 토큰을 발급하고, API 요청마다 Access Token을 검증한다. 만료 시 Refresh Token으로 재발급하며, Refresh Token도 무효면 로그인 화면으로 이동한다(PRD §6, BR-01, E-02).
 - Access/Refresh는 서로 다른 시크릿으로 서명한다. (이유: 한쪽 유출 시 다른 쪽 보호)
 - Access Token 15분, Refresh Token 7일. 두 토큰 모두 `localStorage`에 저장하고 접근은 `client.ts` 한 곳에서만 한다(XSS 노출 위험은 수용). 서버는 Refresh Token을 저장·폐기하지 않는 무상태이며, 로그아웃은 클라이언트 토큰 삭제다.
-- 보호 라우트는 모두 인증 미들웨어를 거친다. 공개 API는 `/api/auth/signup`, `/api/auth/login`, `/api/auth/refresh`뿐이다.
+- 보호 라우트는 모두 인증 미들웨어를 거친다. 공개 API는 `/api/auth/signup`, `/api/auth/login`, `/api/auth/refresh`뿐이다. (API 문서 `/api-docs`는 개발 환경에서만 인증 없이 제공한다, §5.6)
 
 ### 5.3 비밀번호
 - 평문 저장·로깅 금지. 단방향 해시(솔트 포함, bcrypt)로만 저장한다. 비용 인자는 라이브러리 기본값.
@@ -157,6 +159,7 @@ pages  →  components  →  hooks(TanStack Query)  →  api  →  (fetch)
 - 오류 로그에 비밀번호·토큰 원문을 남기지 않는다. 로깅 도구·모니터링·배포 환경은 이번 범위 외.
 - CORS는 `CORS_ORIGIN`에 지정한 출처만 허용한다.
 - DB 마이그레이션 도구는 쓰지 않는다. 스키마는 `backend/src/db/schema.sql` 한 파일로 관리한다(ORM 금지, 마이그레이션 도구 불필요한 규모).
+- API 명세는 `backend/swagger.yaml`(OpenAPI 3.0) 한 파일로 관리하고, `/api-docs`에서 Swagger UI로, `/api-docs/swagger.yaml`에서 원본으로 제공한다. Swagger UI는 CDN(`swagger-ui-dist@5`)에서 로드해 npm 의존성을 추가하지 않는다. `NODE_ENV=production`이면 등록하지 않는다(404). 명세의 서버 주소 기본 포트는 `3000`이다.
 
 ## 6. 디렉토리 구조
 
@@ -222,7 +225,8 @@ backend/
 │  │  ├─ authRoutes.js            # /api/auth/* (FR-01)
 │  │  ├─ userRoutes.js            # /api/users/me (FR-02)
 │  │  ├─ todoRoutes.js            # /api/todos (FR-03~07)
-│  │  └─ categoryRoutes.js        # /api/categories (FR-08)
+│  │  ├─ categoryRoutes.js        # /api/categories (FR-08)
+│  │  └─ docsRoutes.js            # /api-docs Swagger UI (개발 환경만, §5.6)
 │  ├─ services/                   # 비즈니스 규칙(BR) 판단
 │  │  ├─ authService.js           # 가입(BR-07, '기본' 카테고리 생성 BR-10)·로그인·토큰 발급/재발급
 │  │  ├─ userService.js           # 내 정보 수정
@@ -238,9 +242,15 @@ backend/
 │  ├─ todoStatus.test.js          # E-06 상태 경계 단위 테스트
 │  ├─ todos.test.js               # S-04~08, E-03~08 통합
 │  ├─ categories.test.js          # S-09, E-09~10 통합
-│  └─ auth.test.js                # S-01~03, E-01~02 통합
+│  ├─ auth.test.js                # S-01~03, E-01~02 통합
+│  ├─ config.test.js              # BE-01 환경변수 검증·CORS·.env.example
+│  ├─ infra.test.js               # BE-02 풀·오류 핸들러, BE-03 픽스처, Swagger UI
+│  ├─ schema.test.js              # DB-01 제약·인덱스
+│  └─ seed.test.js                # DB-02 시드 데이터
+├─ swagger.yaml                   # REST API 명세 (OpenAPI 3.0)
 ├─ .env.example                   # 백엔드 환경변수 키 목록
-└─ package.json
+├─ .env.test                      # 테스트 DB용 환경변수 (DB 이름 *_test)
+└─ package.json                   # scripts: dev, test, test:coverage, seed
 ```
 
 - 한 도메인은 routes/services/repositories에 같은 접두사 파일 1개씩 대응한다. (인증·내 정보·할일·카테고리)
@@ -263,7 +273,8 @@ backend/
 | 완료 처리 방식, 되돌림 가능 여부 | `PATCH /api/todos/:id`의 `isCompleted`, 목록 체크박스 토글, 되돌림 가능(BR-12) |
 | 오류 응답 형식, 상태 코드 영문 값, error.code 값 | `{ error: { code, message } }`, `upcoming`/`in_progress`/`completed`/`overdue`, error.code 7종(§3) |
 | 환경변수 이름, API 경로 이름 | §5.1, §3의 이름으로 확정 |
-| 테스트 러너, 커버리지 목표 | 백엔드 `node --test`, 프론트 Vitest + Testing Library. 커버리지 목표 없음 |
+| 테스트 러너, 커버리지 목표 | 백엔드 `node --test`(라인 커버리지 90% 기준, `npm run test:coverage`), 프론트 Vitest + Testing Library(목표 없음) |
+| API 문서 | `backend/swagger.yaml`을 `/api-docs` Swagger UI로 제공, CDN 로드, `NODE_ENV=production`이면 미등록 |
 | 프론트 빌드 도구, 라우터 라이브러리, 비밀번호 해시 라이브러리 | Vite, react-router, bcrypt(기본 비용 인자) |
 | 마이그레이션 방식 | `backend/src/db/schema.sql` 단일 파일 |
 | 저장소 내 `frontend/`·`backend/`와 기존 `team-caltalk/` 폴더의 관계 | 루트에 새로 만들고 `team-caltalk/`는 수정하지 않음 |
@@ -279,3 +290,4 @@ backend/
 | 1.2 | 2026-09-30 | leejs05031119@gmail.com | 8-plan §5 미정 항목 결정 반영 |
 | 1.3 | 2026-09-30 | leejs05031119@gmail.com | 문서 정합성 점검: 1-1의 "남은 미정 항목(§7)" 참조 제거(§7은 결정 사항), services BR 목록에 BR-03 추가, §3 인덱스에 `todos.category_id` 추가(schema.sql 인덱스 2개와 일치), §6.2 테스트 파일 주석을 8-plan Task와 일치(auth S-03, categories E-10, todos E-06) |
 | 1.4 | 2026-09-30 | leejs05031119@gmail.com | error.code 값 7종 확정(§3 표) |
+| 1.5 | 2026-10-01 | leejs05031119@gmail.com | 백엔드 구현 반영: Swagger UI(`/api-docs`, 개발 환경만)와 선택 키 `NODE_ENV`(§5.1·5.2·5.6), 백엔드 커버리지 90% 기준(4-9), §6.2에 `docsRoutes.js`·테스트 파일 4개·`swagger.yaml`·`.env.test` 추가, §7 갱신 |

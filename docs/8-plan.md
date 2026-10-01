@@ -132,12 +132,12 @@ flowchart LR
   - `docs/schema.sql`을 내용 변경 없이 `backend/src/db/schema.sql`로 복사한다 (원칙 5.6: 스키마 단일 파일).
   - 로컬 PostgreSQL 17에 개발 DB와 테스트 DB를 만들고 스키마를 적용한다.
 - 완료 조건
-  - [ ] 빈 DB에 `psql -f backend/src/db/schema.sql` 실행이 오류 없이 끝나고 `users`, `categories`, `todos` 테이블과 명시 인덱스 2개(`idx_todos_user_id`, `idx_todos_category_id`)가 존재한다. (`categories(user_id, name)`은 UNIQUE 제약이 인덱스를 자동 생성한다.)
-  - [ ] `start_date > end_date`인 todos INSERT는 `todos_date_range_check` 위반으로 실패하고, `start_date = end_date` INSERT는 성공한다 (BR-04, E-03의 DB 방어선).
-  - [ ] 같은 email의 users INSERT를 두 번 하면 두 번째가 UNIQUE 위반으로 실패한다 (BR-07).
-  - [ ] 같은 사용자에게 같은 이름의 categories INSERT를 두 번 하면 두 번째가 `categories_user_name_unique` 위반으로 실패하고, 다른 사용자에게는 같은 이름이 허용된다 (BR-11).
-  - [ ] 소속 할일이 있는 categories 행을 DELETE하면 FK(`ON DELETE RESTRICT`) 위반으로 실패한다 (BR-09 트랜잭션의 안전장치).
-  - [ ] `todos` 테이블에 상태(status) 컬럼이 없다 (원칙 1-4).
+  - [x] 빈 DB에 `psql -f backend/src/db/schema.sql` 실행이 오류 없이 끝나고 `users`, `categories`, `todos` 테이블과 명시 인덱스 2개(`idx_todos_user_id`, `idx_todos_category_id`)가 존재한다. (`categories(user_id, name)`은 UNIQUE 제약이 인덱스를 자동 생성한다.)
+  - [x] `start_date > end_date`인 todos INSERT는 `todos_date_range_check` 위반으로 실패하고, `start_date = end_date` INSERT는 성공한다 (BR-04, E-03의 DB 방어선).
+  - [x] 같은 email의 users INSERT를 두 번 하면 두 번째가 UNIQUE 위반으로 실패한다 (BR-07).
+  - [x] 같은 사용자에게 같은 이름의 categories INSERT를 두 번 하면 두 번째가 `categories_user_name_unique` 위반으로 실패하고, 다른 사용자에게는 같은 이름이 허용된다 (BR-11).
+  - [x] 소속 할일이 있는 categories 행을 DELETE하면 FK(`ON DELETE RESTRICT`) 위반으로 실패한다 (BR-09 트랜잭션의 안전장치).
+  - [x] `todos` 테이블에 상태(status) 컬럼이 없다 (원칙 1-4).
 
 #### DB-02 공통 테스트 데이터 시드
 - 관련 ID: S-01~S-09, E-01~E-10 (공통 데이터 3-user-scenario.md §3), 원칙 4-2
@@ -149,11 +149,11 @@ flowchart LR
   - 비밀번호는 해시로 저장하고 테스트용 평문 값은 `TEST_PASSWORD` 상수 하나로 export한다.
   - NEW(new-user@example.com)는 미가입 상태 유지를 위해 삽입하지 않는다 (S-01).
 - 완료 조건
-  - [ ] 실행 후 users 2건, categories 5건(USER-A: 기본·업무·개인, USER-B: 기본), todos 7건이 존재한다.
-  - [ ] TODO-A1~A6, B1의 카테고리·시작일자·종료일자·완료 여부가 3-user-scenario.md §3 표와 일치한다 (예: A2 = 업무, D ~ D+2, false / A5 = 개인, D-5 ~ D-1, true).
-  - [ ] 두 번 연속 실행해도 동일한 결과다 (건수·값 동일).
-  - [ ] users에 평문 비밀번호가 저장되지 않는다 (password_hash가 `TEST_PASSWORD`와 다른 문자열).
-  - [ ] `seed()`가 export되어 다른 모듈에서 호출할 수 있고, 라벨(USER-A, TODO-A1 등) → id 매핑을 반환한다.
+  - [x] 실행 후 users 2건, categories 4건(USER-A: 기본·업무·개인, USER-B: 기본), todos 7건이 존재한다.
+  - [x] TODO-A1~A6, B1의 카테고리·시작일자·종료일자·완료 여부가 3-user-scenario.md §3 표와 일치한다 (예: A2 = 업무, D ~ D+2, false / A5 = 개인, D-5 ~ D-1, true).
+  - [x] 두 번 연속 실행해도 동일한 결과다 (건수·값 동일).
+  - [x] users에 평문 비밀번호가 저장되지 않는다 (password_hash가 `TEST_PASSWORD`와 다른 문자열).
+  - [x] `seed()`가 export되어 다른 모듈에서 호출할 수 있고, 라벨(USER-A, TODO-A1 등) → id 매핑을 반환한다.
 
 ### 4.2 백엔드
 
@@ -167,11 +167,11 @@ flowchart LR
   - `backend/src/app.js`(express.json, cors(`CORS_ORIGIN`) 조립), `backend/src/server.js`(config 검증 후 기동), `backend/.env.example`(키 목록. 시크릿·연결 문자열은 비우고 `JWT_ACCESS_EXPIRES_IN=15m`, `JWT_REFRESH_EXPIRES_IN=7d`, `DB_POOL_MAX=20`은 §5 값으로 채운다).
   - 루트 `.gitignore`에 `.env`가 없으면 추가한다.
 - 완료 조건
-  - [ ] 필수 키 중 하나를 빼고 `server.js`를 실행하면 서버가 기동되지 않고, 누락된 키 이름만 출력한다 (비밀값은 출력하지 않는다).
-  - [ ] 모든 키를 넣으면 서버가 `PORT`에서 기동한다.
-  - [ ] `backend/src` 안에서 `process.env`를 참조하는 파일은 `config.js` 하나뿐이다 (grep으로 확인).
-  - [ ] `CORS_ORIGIN`과 다른 Origin의 요청은 CORS 허용 헤더를 받지 못한다.
-  - [ ] `.env.example`에 위 8개 키가 있고 시크릿·연결 문자열은 값이 비어 있으며 만료·풀 크기는 §5 값(`15m`, `7d`, `20`)이 들어 있다. `.env`는 git 추적 대상에서 제외된다.
+  - [x] 필수 키 중 하나를 빼고 `server.js`를 실행하면 서버가 기동되지 않고, 누락된 키 이름만 출력한다 (비밀값은 출력하지 않는다).
+  - [x] 모든 키를 넣으면 서버가 `PORT`에서 기동한다.
+  - [x] `backend/src` 안에서 `process.env`를 참조하는 파일은 `config.js` 하나뿐이다 (grep으로 확인).
+  - [x] `CORS_ORIGIN`과 다른 Origin의 요청은 CORS 허용 헤더를 받지 못한다.
+  - [x] `.env.example`에 위 8개 키가 있고 시크릿·연결 문자열은 값이 비어 있으며 만료·풀 크기는 §5 값(`15m`, `7d`, `20`)이 들어 있다. `.env`는 git 추적 대상에서 제외된다.
 
 #### BE-02 pg 풀·오류 핸들러
 - 관련 ID: 원칙 1-7, 5.5, §3(오류 응답 형식)
@@ -181,10 +181,10 @@ flowchart LR
   - `backend/src/db/pool.js`: `pg.Pool` 싱글턴 1개(`max`는 `DB_POOL_MAX`). DATE 컬럼(OID 1082)을 Date 객체가 아닌 `YYYY-MM-DD` 문자열로 반환하도록 pg 타입 파서를 설정한다 (원칙 1-7).
   - `backend/src/middlewares/errorHandler.js`: `AppError(status, code, message)`와 오류 핸들러. 모든 오류를 `{ "error": { "code", "message" } }`로 변환한다. `app.js`에 등록한다.
 - 완료 조건
-  - [ ] `pool.js`를 여러 파일에서 import해도 Pool 인스턴스는 1개다.
-  - [ ] `SELECT start_date FROM todos` 결과가 `"2026-10-07"` 형식 문자열이다 (Date 객체가 아님).
-  - [ ] 라우트에서 `AppError(400, "X", "msg")`를 던지면 HTTP 400과 `{ error: { code: "X", message: "msg" } }`가 응답된다.
-  - [ ] 예상치 못한 예외는 HTTP 500과 일반 메시지만 응답하고, 스택·SQL·비밀값이 응답에 포함되지 않는다.
+  - [x] `pool.js`를 여러 파일에서 import해도 Pool 인스턴스는 1개다.
+  - [x] `SELECT start_date FROM todos` 결과가 `"2026-10-07"` 형식 문자열이다 (Date 객체가 아님).
+  - [x] 라우트에서 `AppError(400, "X", "msg")`를 던지면 HTTP 400과 `{ error: { code: "X", message: "msg" } }`가 응답된다.
+  - [x] 예상치 못한 예외는 HTTP 500과 일반 메시지만 응답하고, 스택·SQL·비밀값이 응답에 포함되지 않는다.
 
 #### BE-03 테스트 러너·fixtures
 - 관련 ID: 원칙 4-1, 4-2, 4-8
@@ -195,10 +195,10 @@ flowchart LR
   - `backend/tests/fixtures.js`: DB-02의 `seed()`를 재사용하는 `resetAndSeed()`, 라벨 → id 맵, `TEST_PASSWORD` 재노출. 시드 로직을 복제하지 않는다.
   - 테스트는 `DATABASE_URL`이 테스트 DB를 가리킬 때만 실행한다.
 - 완료 조건
-  - [ ] `npm test` 실행 시 `tests/` 아래 테스트가 실행된다.
-  - [ ] `resetAndSeed()`를 두 번 호출해도 users 2건, categories 5건, todos 7건이다 (DB-02와 동일).
-  - [ ] 반환된 맵으로 TODO-A1~A6, TODO-B1, USER-A/B, 카테고리(기본/업무/개인)의 id를 조회할 수 있다.
-  - [ ] `fixtures.js`가 날짜를 하드코딩하지 않는다 (DB-02의 상대 날짜만 사용).
+  - [x] `npm test` 실행 시 `tests/` 아래 테스트가 실행된다.
+  - [x] `resetAndSeed()`를 두 번 호출해도 users 2건, categories 4건, todos 7건이다 (DB-02와 동일).
+  - [x] 반환된 맵으로 TODO-A1~A6, TODO-B1, USER-A/B, 카테고리(기본/업무/개인)의 id를 조회할 수 있다.
+  - [x] `fixtures.js`가 날짜를 하드코딩하지 않는다 (DB-02의 상대 날짜만 사용).
 
 #### BE-04 상태 판단 함수·KST 오늘
 - 관련 ID: FR-06, FR-07 / BR-08 / E-06 / 원칙 1-4, 1-6, 4-3
@@ -208,11 +208,11 @@ flowchart LR
   - `backend/src/services/todoStatus.js`: `getTodayKst(now = new Date())`(`YYYY-MM-DD` 반환)와 `getTodoStatus({ startDate, endDate, isCompleted }, today)`. 판단 순서 완료 → 기한 초과 → 시작 전 → 진행중, 반환 값은 `completed`/`overdue`/`upcoming`/`in_progress`. `today`는 인자로 주입한다. 판단 함수는 이 1개만 둔다.
   - `backend/tests/todoStatus.test.js`: 단위 테스트.
 - 완료 조건
-  - [ ] `E-06` 표 5건이 통과한다 (시작일=오늘 미완료 → `in_progress`, 종료일=오늘 미완료 → `in_progress`, 종료일=어제 미완료 → `overdue`, 종료일=어제 완료 → `completed`, 시작일>오늘 미완료 → `upcoming`).
-  - [ ] 도메인 §3 경계 예시 4건이 통과한다.
-  - [ ] TODO-A1~A6 조건이 각각 `upcoming`, `in_progress`, `in_progress`, `overdue`, `completed`, `in_progress`를 반환한다.
-  - [ ] `getTodayKst(new Date("2026-09-30T15:00:00Z"))`는 `"2026-10-01"`, `getTodayKst(new Date("2026-09-30T14:59:59Z"))`는 `"2026-09-30"`이다 (BR-08 KST 경계).
-  - [ ] 테스트 이름에 `E-06`이 포함된다.
+  - [x] `E-06` 표 5건이 통과한다 (시작일=오늘 미완료 → `in_progress`, 종료일=오늘 미완료 → `in_progress`, 종료일=어제 미완료 → `overdue`, 종료일=어제 완료 → `completed`, 시작일>오늘 미완료 → `upcoming`).
+  - [x] 도메인 §3 경계 예시 4건이 통과한다.
+  - [x] TODO-A1~A6 조건이 각각 `upcoming`, `in_progress`, `in_progress`, `overdue`, `completed`, `in_progress`를 반환한다.
+  - [x] `getTodayKst(new Date("2026-09-30T15:00:00Z"))`는 `"2026-10-01"`, `getTodayKst(new Date("2026-09-30T14:59:59Z"))`는 `"2026-09-30"`이다 (BR-08 KST 경계).
+  - [x] 테스트 이름에 `E-06`이 포함된다.
 
 #### BE-05 회원가입 API
 - 관련 ID: FR-01 / BR-01, BR-03, BR-07 / S-01, E-01
@@ -224,11 +224,11 @@ flowchart LR
   - `backend/src/routes/authRoutes.js`: `POST /api/auth/signup` (이메일·비밀번호·이름 필수값 형식 검증). 응답에 비밀번호 해시를 포함하지 않는다. `app.js`에 `/api/auth` 등록.
   - `backend/tests/auth.test.js`에 S-01, E-01 테스트.
 - 완료 조건
-  - [ ] `S-01 회원가입`: NEW 정보로 `POST /api/auth/signup` → 201, DB에 users 1건 추가, `password_hash`는 평문과 다르고 응답 본문에 `password`/`passwordHash`가 없다.
-  - [ ] `S-01` 가입 직후 해당 사용자의 '기본' 카테고리가 1건 존재한다 (BR-03 전제).
-  - [ ] `E-01 중복 이메일 가입`: USER-A 이메일로 가입 → 409와 `error.code = EMAIL_DUPLICATED`, users 건수 불변 (BR-07). 대소문자만 다른 이메일(`USER-A@Example.com`)도 409다.
-  - [ ] 필수값(이메일·비밀번호·이름) 누락 시 400이고 DB 변경이 없다.
-  - [ ] 가입 응답에 토큰이 없다 (가입 후 로그인해야 앱 사용 가능, BR-01).
+  - [x] `S-01 회원가입`: NEW 정보로 `POST /api/auth/signup` → 201, DB에 users 1건 추가, `password_hash`는 평문과 다르고 응답 본문에 `password`/`passwordHash`가 없다.
+  - [x] `S-01` 가입 직후 해당 사용자의 '기본' 카테고리가 1건 존재한다 (BR-03 전제).
+  - [x] `E-01 중복 이메일 가입`: USER-A 이메일로 가입 → 409와 `error.code = EMAIL_DUPLICATED`, users 건수 불변 (BR-07). 대소문자만 다른 이메일(`USER-A@Example.com`)도 409다.
+  - [x] 필수값(이메일·비밀번호·이름) 누락 시 400이고 DB 변경이 없다.
+  - [x] 가입 응답에 토큰이 없다 (가입 후 로그인해야 앱 사용 가능, BR-01).
 
 #### BE-06 로그인·토큰 재발급 API
 - 관련 ID: FR-01 / BR-01 / S-02, E-02
@@ -239,11 +239,11 @@ flowchart LR
   - `authRoutes.js`에 `POST /api/auth/login`(응답: `accessToken`, `refreshToken`, `user{id,email,name}`), `POST /api/auth/refresh`(요청: `refreshToken`, 응답: 새 `accessToken`) 추가.
   - `auth.test.js`에 S-02, E-02 관련 테스트 추가.
 - 완료 조건
-  - [ ] `S-02 로그인`: USER-A 이메일·`TEST_PASSWORD`로 로그인 → 200, `accessToken`·`refreshToken` 반환, 두 토큰의 payload에 USER-A id가 있다.
-  - [ ] 잘못된 비밀번호와 존재하지 않는 이메일은 동일한 401 응답(같은 code, message "이메일 또는 비밀번호가 올바르지 않습니다.")이다 (원칙 5.3).
-  - [ ] Access Token은 Refresh 시크릿으로, Refresh Token은 Access 시크릿으로 검증하면 실패한다.
-  - [ ] `E-02` 유효한 Refresh Token으로 `/api/auth/refresh` → 200과 새 Access Token. 위조·만료 Refresh Token, Access Token을 넣은 경우는 401.
-  - [ ] 로그인·재발급 응답과 로그에 비밀번호 해시가 없다.
+  - [x] `S-02 로그인`: USER-A 이메일·`TEST_PASSWORD`로 로그인 → 200, `accessToken`·`refreshToken` 반환, 두 토큰의 payload에 USER-A id가 있다.
+  - [x] 잘못된 비밀번호와 존재하지 않는 이메일은 동일한 401 응답(같은 code, message "이메일 또는 비밀번호가 올바르지 않습니다.")이다 (원칙 5.3).
+  - [x] Access Token은 Refresh 시크릿으로, Refresh Token은 Access 시크릿으로 검증하면 실패한다.
+  - [x] `E-02` 유효한 Refresh Token으로 `/api/auth/refresh` → 200과 새 Access Token. 위조·만료 Refresh Token, Access Token을 넣은 경우는 401.
+  - [x] 로그인·재발급 응답과 로그에 비밀번호 해시가 없다.
 
 #### BE-07 인증 미들웨어
 - 관련 ID: BR-01 / E-02 / 원칙 2.1, 5.2
@@ -254,11 +254,11 @@ flowchart LR
   - `app.js`에서 `/api/users`, `/api/todos`, `/api/categories` 라우터 앞단에 적용한다 (공개 API는 `/api/auth/*`뿐).
   - `auth.test.js`에 미들웨어 테스트 추가.
 - 완료 조건
-  - [ ] `E-02 미인증 접근`: 토큰 없음 → 401, 위조 토큰 → 401.
-  - [ ] `E-02 만료 토큰`: `expiresIn`이 지난 Access Token → 401.
-  - [ ] Refresh Token을 Access 자리에 보내면 401이다.
-  - [ ] 유효한 Access Token이면 `req.user.id`가 토큰의 사용자 id로 설정되고 다음 핸들러가 호출된다.
-  - [ ] `app.js`에서 `/api/auth/*` 외 모든 `/api` 라우터가 이 미들웨어를 거친다 (라우트 등록 코드 확인).
+  - [x] `E-02 미인증 접근`: 토큰 없음 → 401, 위조 토큰 → 401.
+  - [x] `E-02 만료 토큰`: `expiresIn`이 지난 Access Token → 401.
+  - [x] Refresh Token을 Access 자리에 보내면 401이다.
+  - [x] 유효한 Access Token이면 `req.user.id`가 토큰의 사용자 id로 설정되고 다음 핸들러가 호출된다.
+  - [x] `app.js`에서 `/api/auth/*` 외 모든 `/api` 라우터가 이 미들웨어를 거친다 (라우트 등록 코드 확인).
 
 #### BE-08 내 정보 API
 - 관련 ID: FR-02 / BR-01 / S-03
@@ -268,11 +268,11 @@ flowchart LR
   - `userRepository.js`에 조회·이름 수정 추가, `backend/src/services/userService.js`, `backend/src/routes/userRoutes.js`: `GET /api/users/me`, `PATCH /api/users/me`(수정 항목은 이름만, §5 확정). 대상 사용자는 항상 `req.user.id`다.
   - 테스트 파일은 `backend/tests/auth.test.js`에 S-03 케이스를 추가한다 (원칙 §6 구조에 별도 파일이 없다).
 - 완료 조건
-  - [ ] `S-03 내 정보 수정`: USER-A 토큰으로 `PATCH /api/users/me { name }` → 200, 재조회(`GET /api/users/me`) 시 변경된 이름이 반환된다.
-  - [ ] 요청 본문에 다른 사용자의 id나 `email`을 넣어도 무시되고 USER-B의 이름과 USER-A의 이메일은 변하지 않는다.
-  - [ ] 응답에 `password_hash`가 없다.
-  - [ ] `name`이 없거나 빈 문자열이면 400이고 DB 변경이 없다.
-  - [ ] 토큰 없이 호출하면 401이다 (BR-01).
+  - [x] `S-03 내 정보 수정`: USER-A 토큰으로 `PATCH /api/users/me { name }` → 200, 재조회(`GET /api/users/me`) 시 변경된 이름이 반환된다.
+  - [x] 요청 본문에 다른 사용자의 id나 `email`을 넣어도 무시되고 USER-B의 이름과 USER-A의 이메일은 변하지 않는다.
+  - [x] 응답에 `password_hash`가 없다.
+  - [x] `name`이 없거나 빈 문자열이면 400이고 DB 변경이 없다.
+  - [x] 토큰 없이 호출하면 401이다 (BR-01).
 
 #### BE-09 카테고리 조회·생성·수정 API
 - 관련 ID: FR-08 / BR-01, BR-03, BR-10, BR-11 / S-09, E-10
@@ -282,12 +282,12 @@ flowchart LR
   - `categoryRepository.js` 확장(본인 목록, 단건 조회, 생성, 이름 수정 — 모든 쿼리에 `user_id` 조건), `backend/src/services/categoryService.js`, `backend/src/routes/categoryRoutes.js`: `GET /api/categories`, `POST /api/categories`, `PATCH /api/categories/:id`. 이름 검증: 빈 값 400, 앞뒤 공백 제거 후 100자 초과 400, 같은 사용자 안의 이름 중복 409 (BR-11). '기본' 카테고리 수정 요청은 400 `DEFAULT_CATEGORY_PROTECTED`로 거부한다 (BR-10).
   - `backend/tests/categories.test.js`에 S-09 테스트.
 - 완료 조건
-  - [ ] `S-09 카테고리 목록`: USER-A 토큰으로 `GET /api/categories` → 기본·업무·개인 3건만, USER-B의 '기본'은 포함되지 않는다.
-  - [ ] `S-09 카테고리 생성`: `POST` → 201, USER-A 소유로 저장되고 목록에 나타난다.
-  - [ ] `S-09 카테고리 수정`: USER-A가 '개인' 이름을 수정 → 200, 재조회 시 반영된다.
-  - [ ] 타인 카테고리(USER-B의 '기본') 수정 요청은 거부(404)되고 이름이 변하지 않는다 (사용자별 소유, 원칙 5.4).
-  - [ ] 빈 이름은 400, 같은 사용자의 기존 이름(예: '업무')으로 생성·수정하면 409이며 DB 변경이 없다 (BR-11). 다른 사용자(USER-B)와 같은 이름은 허용된다.
-  - [ ] `E-10` USER-A가 '기본' 수정 요청 → 400 `DEFAULT_CATEGORY_PROTECTED`이고 이름이 변하지 않는다 (BR-10).
+  - [x] `S-09 카테고리 목록`: USER-A 토큰으로 `GET /api/categories` → 기본·업무·개인 3건만, USER-B의 '기본'은 포함되지 않는다.
+  - [x] `S-09 카테고리 생성`: `POST` → 201, USER-A 소유로 저장되고 목록에 나타난다.
+  - [x] `S-09 카테고리 수정`: USER-A가 '개인' 이름을 수정 → 200, 재조회 시 반영된다.
+  - [x] 타인 카테고리(USER-B의 '기본') 수정 요청은 거부(404)되고 이름이 변하지 않는다 (사용자별 소유, 원칙 5.4).
+  - [x] 빈 이름은 400, 같은 사용자의 기존 이름(예: '업무')으로 생성·수정하면 409이며 DB 변경이 없다 (BR-11). 다른 사용자(USER-B)와 같은 이름은 허용된다.
+  - [x] `E-10` USER-A가 '기본' 수정 요청 → 400 `DEFAULT_CATEGORY_PROTECTED`이고 이름이 변하지 않는다 (BR-10).
 
 #### BE-10 카테고리 삭제 API (BR-09 트랜잭션)
 - 관련 ID: FR-08 / BR-03, BR-09, BR-10 / S-09, E-09, E-10
@@ -298,12 +298,12 @@ flowchart LR
   - `categoryRoutes.js`에 `DELETE /api/categories/:id`. 삭제 확인(`window.confirm`)은 프론트에서만 처리하며 서버에는 확인 절차가 없다.
   - `categories.test.js`에 E-09 테스트.
 - 완료 조건
-  - [ ] `E-09 카테고리 삭제 시 할일 이동`: USER-A가 '업무' 삭제 → 204(성공), '업무' 행 없음, TODO-A1·A2·A4의 category가 '기본'이고 todos 총 건수는 삭제 전과 같다 (BR-09, 할일 미삭제).
-  - [ ] 삭제된 카테고리에 속하지 않던 TODO-A3·A5(개인)·A6 및 USER-B 데이터는 변하지 않는다.
-  - [ ] 타인 카테고리 삭제 요청은 거부되고(404) 해당 카테고리·할일 모두 불변이다 (BR-02 원칙 5.4).
-  - [ ] 트랜잭션 중간 실패 시 롤백되어 할일 이동도 취소된다 (테스트에서 DELETE 단계를 실패시켜 todos의 category_id가 원상태임을 확인).
-  - [ ] 트랜잭션 Client는 성공·실패 모두에서 `release()`된다 (코드 확인: `finally`).
-  - [ ] `E-10` '기본' 카테고리 삭제 요청 → 400 `DEFAULT_CATEGORY_PROTECTED`, '기본' 카테고리와 todos 건수 불변 (BR-10).
+  - [x] `E-09 카테고리 삭제 시 할일 이동`: USER-A가 '업무' 삭제 → 204(성공), '업무' 행 없음, TODO-A1·A2·A4의 category가 '기본'이고 todos 총 건수는 삭제 전과 같다 (BR-09, 할일 미삭제).
+  - [x] 삭제된 카테고리에 속하지 않던 TODO-A3·A5(개인)·A6 및 USER-B 데이터는 변하지 않는다.
+  - [x] 타인 카테고리 삭제 요청은 거부되고(404) 해당 카테고리·할일 모두 불변이다 (BR-02 원칙 5.4).
+  - [x] 트랜잭션 중간 실패 시 롤백되어 할일 이동도 취소된다 (테스트에서 DELETE 단계를 실패시켜 todos의 category_id가 원상태임을 확인).
+  - [x] 트랜잭션 Client는 성공·실패 모두에서 `release()`된다 (코드 확인: `finally`).
+  - [x] `E-10` '기본' 카테고리 삭제 요청 → 400 `DEFAULT_CATEGORY_PROTECTED`, '기본' 카테고리와 todos 건수 불변 (BR-10).
 
 #### BE-11 할일 등록 API
 - 관련 ID: FR-03 / BR-01, BR-02, BR-03, BR-04, BR-05(서버측), BR-06 / S-04, E-03, E-04
@@ -314,13 +314,13 @@ flowchart LR
   - service 규칙: `startDate` 미전달 시 KST 오늘 + 7일, `endDate` 미전달 시 `startDate`(BR-05). `startDate ≤ endDate` 위반 시 400 (BR-04). `categoryId` 미전달 시 본인 '기본' 카테고리 id (BR-03). `categoryId`가 본인 소유가 아니면 거부(404). `user_id`는 `req.user.id`만 사용한다. 응답 todo에는 `status`(BE-04 함수)를 포함한다.
   - `backend/tests/todos.test.js`에 테스트.
 - 완료 조건
-  - [ ] `S-04 할일 등록(기본값)`: 제목만 전달 → 201, `startDate = D+7`, `endDate = D+7`, `isCompleted=false`, 소유자 USER-A (D는 KST 오늘).
-  - [ ] `E-04 카테고리 미지정 등록`: `categoryId` 없이 등록 → 저장된 할일의 category가 USER-A의 '기본'이다 (BR-03).
-  - [ ] `E-03 종료일자 < 시작일자`: `startDate=D+3, endDate=D+2` → 400과 오류 응답, todos 건수 불변 (BR-04).
-  - [ ] `E-03` 같은 날(`startDate = endDate`) 등록은 201이다.
-  - [ ] USER-B 소유 카테고리 id를 지정해 등록하면 거부되고 todos 건수가 불변이다.
-  - [ ] 요청 본문에 `userId`를 넣어도 무시되고 토큰 사용자 소유로 저장된다.
-  - [ ] 제목 누락 또는 날짜 형식 오류는 400이고 DB 변경이 없다.
+  - [x] `S-04 할일 등록(기본값)`: 제목만 전달 → 201, `startDate = D+7`, `endDate = D+7`, `isCompleted=false`, 소유자 USER-A (D는 KST 오늘).
+  - [x] `E-04 카테고리 미지정 등록`: `categoryId` 없이 등록 → 저장된 할일의 category가 USER-A의 '기본'이다 (BR-03).
+  - [x] `E-03 종료일자 < 시작일자`: `startDate=D+3, endDate=D+2` → 400과 오류 응답, todos 건수 불변 (BR-04).
+  - [x] `E-03` 같은 날(`startDate = endDate`) 등록은 201이다.
+  - [x] USER-B 소유 카테고리 id를 지정해 등록하면 거부되고 todos 건수가 불변이다.
+  - [x] 요청 본문에 `userId`를 넣어도 무시되고 토큰 사용자 소유로 저장된다.
+  - [x] 제목 누락 또는 날짜 형식 오류는 400이고 DB 변경이 없다.
 
 #### BE-12 할일 조회 API (status 계산)
 - 관련 ID: FR-06 / BR-02, BR-08 / S-07, E-05, E-06
@@ -331,11 +331,11 @@ flowchart LR
   - `todoRoutes.js`에 `GET /api/todos`, `GET /api/todos/:id`(편집 화면용). 목록 정렬은 `start_date`, `id` 오름차순(§5 확정). 캘린더 탭도 이 목록을 그대로 쓴다(전용 파라미터 없음, §5 확정).
   - `todos.test.js`에 테스트.
 - 완료 조건
-  - [ ] `S-07 목록 조회`: USER-A 토큰 `GET /api/todos` → TODO-A1~A6 6건만 반환하고 TODO-B1은 없다 (BR-02).
-  - [ ] `E-06` 각 항목의 `status`가 A1 `upcoming`, A2 `in_progress`, A3 `in_progress`, A4 `overdue`, A5 `completed`, A6 `in_progress`다.
-  - [ ] `E-05 타인 할일 조회`: USER-A가 `GET /api/todos/{TODO-B1 id}` → 거부(404), 응답에 B1의 내용이 없다.
-  - [ ] USER-B 토큰의 목록에는 TODO-B1만 있다.
-  - [ ] 응답 필드는 camelCase(`startDate`, `endDate`, `isCompleted`, `categoryId`)이고 날짜는 `YYYY-MM-DD`이며 `status` 영문 코드를 포함한다.
+  - [x] `S-07 목록 조회`: USER-A 토큰 `GET /api/todos` → TODO-A1~A6 6건만 반환하고 TODO-B1은 없다 (BR-02).
+  - [x] `E-06` 각 항목의 `status`가 A1 `upcoming`, A2 `in_progress`, A3 `in_progress`, A4 `overdue`, A5 `completed`, A6 `in_progress`다.
+  - [x] `E-05 타인 할일 조회`: USER-A가 `GET /api/todos/{TODO-B1 id}` → 거부(404), 응답에 B1의 내용이 없다.
+  - [x] USER-B 토큰의 목록에는 TODO-B1만 있다.
+  - [x] 응답 필드는 camelCase(`startDate`, `endDate`, `isCompleted`, `categoryId`)이고 날짜는 `YYYY-MM-DD`이며 `status` 영문 코드를 포함한다.
 
 #### BE-13 할일 필터 (카테고리 + 상태)
 - 관련 ID: FR-07 / BR-02, BR-08 / S-08, E-07, E-08 / 원칙 1-5, 4-4
@@ -346,12 +346,12 @@ flowchart LR
   - `todoRoutes.js`: `GET /api/todos?categoryId=&status=` (status 값 검증).
   - `todos.test.js`에 필터 테스트.
 - 완료 조건
-  - [ ] 원칙 1-5: TODO-A1~A6에 대해 각 `status` 필터 결과 id 집합이 BE-04 판단 함수 결과와 일치한다 (`upcoming`={A1}, `in_progress`={A2,A3,A6}, `completed`={A5}, `overdue`={A4}).
-  - [ ] `E-07 기한 초과 필터`: `status=overdue` → A4만, A5(완료)는 제외된다.
-  - [ ] `E-08 필터 조합`: `categoryId=업무` + `status=in_progress` → {A2}, `categoryId=업무` + `status=overdue` → {A4}, `categoryId=업무` + `status=completed` → 빈 배열(200).
-  - [ ] `S-08`: `categoryId=개인`만 → {A3, A5}, 필터 없음 → 6건.
-  - [ ] 허용되지 않는 `status` 값은 400이다.
-  - [ ] USER-A가 USER-B의 categoryId로 필터해도 USER-B 할일이 반환되지 않는다 (BR-02).
+  - [x] 원칙 1-5: TODO-A1~A6에 대해 각 `status` 필터 결과 id 집합이 BE-04 판단 함수 결과와 일치한다 (`upcoming`={A1}, `in_progress`={A2,A3,A6}, `completed`={A5}, `overdue`={A4}).
+  - [x] `E-07 기한 초과 필터`: `status=overdue` → A4만, A5(완료)는 제외된다.
+  - [x] `E-08 필터 조합`: `categoryId=업무` + `status=in_progress` → {A2}, `categoryId=업무` + `status=overdue` → {A4}, `categoryId=업무` + `status=completed` → 빈 배열(200).
+  - [x] `S-08`: `categoryId=개인`만 → {A3, A5}, 필터 없음 → 6건.
+  - [x] 허용되지 않는 `status` 값은 400이다.
+  - [x] USER-A가 USER-B의 categoryId로 필터해도 USER-B 할일이 반환되지 않는다 (BR-02).
 
 #### BE-14 할일 수정·삭제 API
 - 관련 ID: FR-04, FR-05 / BR-02, BR-03, BR-04, BR-06, BR-12 / S-05, S-06, E-03, E-05, E-06
@@ -362,13 +362,13 @@ flowchart LR
   - `todoRoutes.js`: `PATCH /api/todos/:id`(title, categoryId, startDate, endDate, isCompleted 부분 수정. 완료 처리는 별도 API 없이 `isCompleted` 수정으로 처리, §5 확정), `DELETE /api/todos/:id`.
   - `todos.test.js`에 테스트.
 - 완료 조건
-  - [ ] `S-05 할일 수정`: USER-A가 TODO-A2의 제목·카테고리·날짜를 수정 → 200, 재조회 시 반영된다.
-  - [ ] `E-03` 수정 시 종료일자 < 시작일자 → 400이고 기존 값 불변. 시작일자만 기존 종료일자보다 늦게 바꾸는 경우도 400이다. 같은 날은 200이다.
-  - [ ] `E-05 타인 할일 수정`: USER-A가 TODO-B1 `PATCH` → 거부(404), B1의 DB 값이 불변이다.
-  - [ ] `E-05 타인 할일 삭제`: USER-A가 TODO-B1 `DELETE` → 거부(404), B1이 그대로 존재한다.
-  - [ ] `S-06 할일 삭제`: USER-A가 TODO-A2 `DELETE` → 204, 이후 목록에서 사라지고 다른 할일(A1, A3~A6)은 불변이다.
-  - [ ] `isCompleted: true`로 수정하면 이후 조회의 `status`가 `completed`다 (E-06). `isCompleted: false`로 되돌리면 `status`가 날짜 기준(KST 오늘)으로 다시 계산된다 (BR-12).
-  - [ ] 타인 소유 `categoryId`로 수정하면 거부되고 할일이 불변이다.
+  - [x] `S-05 할일 수정`: USER-A가 TODO-A2의 제목·카테고리·날짜를 수정 → 200, 재조회 시 반영된다.
+  - [x] `E-03` 수정 시 종료일자 < 시작일자 → 400이고 기존 값 불변. 시작일자만 기존 종료일자보다 늦게 바꾸는 경우도 400이다. 같은 날은 200이다.
+  - [x] `E-05 타인 할일 수정`: USER-A가 TODO-B1 `PATCH` → 거부(404), B1의 DB 값이 불변이다.
+  - [x] `E-05 타인 할일 삭제`: USER-A가 TODO-B1 `DELETE` → 거부(404), B1이 그대로 존재한다.
+  - [x] `S-06 할일 삭제`: USER-A가 TODO-A2 `DELETE` → 204, 이후 목록에서 사라지고 다른 할일(A1, A3~A6)은 불변이다.
+  - [x] `isCompleted: true`로 수정하면 이후 조회의 `status`가 `completed`다 (E-06). `isCompleted: false`로 되돌리면 `status`가 날짜 기준(KST 오늘)으로 다시 계산된다 (BR-12).
+  - [x] 타인 소유 `categoryId`로 수정하면 거부되고 할일이 불변이다.
 
 ### 4.3 프론트엔드
 
@@ -590,7 +590,8 @@ flowchart LR
 | 이메일 대소문자 | 서비스에서 앞뒤 공백 제거·소문자 정규화 후 저장·조회(BR-07). DB는 단순 UNIQUE 유지 | BE-05, BE-06 |
 | 모바일 헤더 메뉴·날짜 선택 | 헤더는 줄바꿈 배치, 날짜 선택은 `<input type="date">` | FE-09, FE-13 |
 | 목록 정렬 | `start_date`, `id` 오름차순 | BE-12 |
-| 테스트 러너·커버리지 | 백엔드 `node --test`, 프론트 Vitest + Testing Library. 커버리지 수치 목표 없음 | BE-03, FE-14 |
+| 테스트 러너·커버리지 | 백엔드 `node --test`(`npm run test:coverage`에서 `src/` 라인 커버리지 90% 기준), 프론트 Vitest + Testing Library(커버리지 수치 목표 없음) | BE-03, FE-14 |
+| API 문서 | `backend/swagger.yaml`을 `/api-docs` Swagger UI로 제공(CDN 로드, 의존성 추가 없음). `NODE_ENV=production`이면 등록하지 않는다 | BE-01 |
 | 빌드 도구·라우터·해시 라이브러리 | Vite, react-router, bcrypt(기본 비용 인자) | BE-01, FE-01 |
 | 오류 응답 형식·상태 코드 영문 값·error.code·환경변수·API 경로 이름 | 5-project-principle.md 제안을 그대로 확정 (`{error:{code,message}}`, `upcoming`/`in_progress`/`completed`/`overdue`). error.code는 `VALIDATION_ERROR`(400), `DEFAULT_CATEGORY_PROTECTED`(400), `UNAUTHORIZED`(401), `INVALID_CREDENTIALS`(401), `NOT_FOUND`(404), `EMAIL_DUPLICATED`(409), `CATEGORY_NAME_DUPLICATED`(409) 7종 (원칙 §3) | BE-01~BE-14, FE-02 |
 | DB 세부 | 식별자 `BIGINT GENERATED ALWAYS AS IDENTITY`, `created_at` 유지, 문자열 길이(email 255, name 100, title 200), FK 정책(`todos.category_id`는 RESTRICT, 나머지 NO ACTION), 사용자 삭제(탈퇴) 기능 없음, 스키마는 `schema.sql` 단일 파일 | DB-01 |
@@ -606,3 +607,6 @@ flowchart LR
 | 1.1 | 2026-09-30 | leejs05031119@gmail.com | §5 미정 항목을 모두 결정(토큰 15분/7일, '기본' 카테고리 수정·삭제 불가 BR-10, 카테고리 이름 유일 BR-11, 완료 토글 BR-12 등)하고 Task 수행 작업·완료 조건에 반영 |
 | 1.2 | 2026-09-30 | leejs05031119@gmail.com | 문서 정합성 점검: §1.1 "범위 외/미정" → "범위 외"(모두 결정됨), DB-02 관련 ID에 E-10 추가, BE-08·FE-13의 "§6 구조"를 "원칙 §6 구조"로 수정(이 문서 §6은 변경 이력) |
 | 1.3 | 2026-09-30 | leejs05031119@gmail.com | error.code 값 7종 확정 반영(§5, BE-05 완료 조건) |
+| 1.4 | 2026-09-30 | leejs05031119@gmail.com | DB-01·DB-02 완료 조건 체크. DB-02·BE-03 완료 조건의 카테고리 건수 오기 수정(5건 → 4건) |
+| 1.5 | 2026-09-30 | leejs05031119@gmail.com | BE-01~BE-14 완료 조건 체크 (백엔드 테스트 117개 통과, 라인 커버리지 99.32%) |
+| 1.6 | 2026-10-01 | leejs05031119@gmail.com | 백엔드 구현 반영: §5에 API 문서(Swagger UI, 개발 환경만) 추가, 백엔드 커버리지 90% 기준 반영 (백엔드 테스트 119개 통과) |
