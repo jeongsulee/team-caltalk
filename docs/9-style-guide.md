@@ -184,7 +184,7 @@
 | 할일 칩 | 날짜 숫자 아래, 셀 폭 가득(좌우 여백 `--space-1`), 칩 사이 `--space-1`. 상태 색(§2.3). 여러 날에 걸친 할일은 시작~종료 각 날짜 셀에 같은 칩을 반복 표시한다 (8-plan §5) |
 | 넘침 | 칩이 셀 높이를 넘으면 셀 안에서 세로 스크롤 없이 잘라내고 `+N`(`--font-caption` `--color-text-secondary`)을 표시한다 |
 | 클릭 | 셀 클릭 시 해당 일 할일 팝업(`cursor: pointer`). 칩만의 별도 클릭 동작은 없다 |
-| 날짜 팝업 | 네이티브 `<dialog>`(`showModal`). 폭 최대 480px, 패딩 `--space-6`, `1px solid var(--color-border)`, `--radius-lg`, 배경 `--color-bg`, 그림자 없음, backdrop 반투명 검정. 제목 `YYYY-MM-DD`, 항목은 상태 칩 → 제목 → 기간(`--font-caption`) 순서로 행마다 하단 구분선. 할일이 없으면 "이 날짜에 일정이 없습니다.". 바깥 클릭·Esc·닫기(보조 버튼)로 닫는다 |
+| 날짜 팝업 | 네이티브 `<dialog>`(`showModal`). 폭 `min(480px, 100% - 좌우 --space-4)`이며 패딩·테두리를 포함한다(`box-sizing: border-box`, 모바일에서 화면 밖으로 넘치지 않게), 패딩 `--space-6`, `1px solid var(--color-border)`, `--radius-lg`, 배경 `--color-bg`, 그림자 없음, backdrop 반투명 검정. 제목 `YYYY-MM-DD`, 항목은 상태 칩 → 제목 → 기간(`--font-caption`) 순서로 행마다 하단 구분선. 할일이 없으면 "이 날짜에 일정이 없습니다.". 바깥 클릭·Esc·닫기(보조 버튼)로 닫는다 |
 
 - 오늘 강조는 표시 전용이다. 서버 API에 '오늘'을 내려주는 필드가 없으므로 프론트가 `Intl.DateTimeFormat`(`timeZone: 'Asia/Seoul'`)으로 KST 날짜를 구해 강조 위치에만 쓴다. 상태 판단·색은 반드시 서버 `status`를 따른다 (원칙 1-4, 1-6). 오늘 강조를 빼거나 서버가 오늘 날짜를 내려주도록 바꾸는 것은 결정이 필요하다 (§9).
 - 참고 화면의 음력·절기·공휴일 표시는 요구사항에 없으므로 만들지 않는다.
