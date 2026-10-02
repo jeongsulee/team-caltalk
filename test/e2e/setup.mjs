@@ -1,6 +1,6 @@
 // E2E 테스트 데이터 준비 (3-user-scenario.md §3). DB를 비우는 seed 대신 API로 고유 계정을 만든다.
-// 실행: node test/e2e/setup.mjs  → 생성된 계정·ID를 JSON으로 출력
-const API = 'http://localhost:3000/api';
+// 실행: node test/e2e/setup.mjs  → 생성된 계정·ID를 JSON으로 출력 (배포 대상은 API=https://.../api 환경변수로 지정)
+const API = process.env.API ?? 'http://localhost:3000/api';
 const PASSWORD = 'password123';
 const run = Date.now();
 
