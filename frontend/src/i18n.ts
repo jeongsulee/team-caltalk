@@ -12,7 +12,7 @@ const ko = {
   nav: { todos: '할일', categories: '카테고리', profile: '내 정보', logout: '로그아웃' },
   common: { email: '이메일', password: '비밀번호', name: '이름', save: '저장', cancel: '취소', edit: '수정', delete: '삭제', add: '추가', all: '전체' },
   status: { upcoming: '시작 전', in_progress: '진행중', completed: '완료', overdue: '기한 초과' } as Record<TodoStatus, string>,
-  login: { title: '로그인', submit: '로그인', noAccount: '계정이 없나요?', toSignup: '회원가입' },
+  login: { title: '로.그.인', submit: '로그인', noAccount: '계정이 없나요?', toSignup: '회원가입' },
   signup: { title: '회원가입', submit: '가입하기', hasAccount: '이미 계정이 있나요?', toLogin: '로그인' },
   profile: { title: '내 정보 수정', emailReadonly: '이메일 (수정 불가)', saved: '저장되었습니다.' },
   category: {
