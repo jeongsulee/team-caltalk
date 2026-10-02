@@ -100,6 +100,6 @@
 <rect x="780" y="460" width="120" height="58" fill="none" stroke="#e2e8f0"/>
 <text x="788" y="478" font-size="12" font-weight="600" fill="#cbd5e1">3</text>
 <text x="40" y="558" font-size="13" fill="#94a3b8">여러 날 할일은 시작~종료 각 날짜 셀에 표시</text>
-<text x="40" y="578" font-size="13" fill="#94a3b8">필터 미적용, 날짜 셀·할일 클릭 동작 없음</text>
+<text x="40" y="578" font-size="13" fill="#94a3b8">필터 미적용, 날짜 셀 클릭 시 해당 일 할일 팝업 (바깥 클릭·Esc·닫기로 닫음)</text>
 <text x="920" y="558" font-size="13" fill="#64748b" text-anchor="end">WF-05 · FR-06 · BR-02 · S-07, E-05</text>
 </svg>

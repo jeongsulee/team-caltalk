@@ -274,7 +274,7 @@ backend/
 | '기본' 카테고리 식별 방식과 생성 시점, 수정·삭제 가능 여부 | 사용자별 행, 이름 '기본', 가입 트랜잭션에서 생성. 수정·삭제 불가(BR-10, 400 `DEFAULT_CATEGORY_PROTECTED`, UI는 버튼 숨김) |
 | 카테고리 이름 검증 | 빈 값 400, 사용자별 중복 409, 최대 100자(BR-11) |
 | 타인 리소스 접근 거부 시 HTTP 상태 코드 | 404 |
-| 캘린더 탭 조회 API, 여러 날에 걸친 할일 표시 방식 | 전용 API 없이 필터 없는 `GET /api/todos`. 시작~종료 각 날짜 셀에 제목 표시, 필터·클릭 동작 없음 |
+| 캘린더 탭 조회 API, 여러 날에 걸친 할일 표시 방식 | 전용 API 없이 필터 없는 `GET /api/todos`. 시작~종료 각 날짜 셀에 제목 표시, 필터 없음. 날짜 클릭 시 해당 일 할일을 팝업(`<dialog>`)으로 표시 |
 | 완료 처리 방식, 되돌림 가능 여부 | `PATCH /api/todos/:id`의 `isCompleted`, 목록 체크박스 토글, 되돌림 가능(BR-12) |
 | 오류 응답 형식, 상태 코드 영문 값, error.code 값 | `{ error: { code, message } }`, `upcoming`/`in_progress`/`completed`/`overdue`, error.code 7종(§3) |
 | 환경변수 이름, API 경로 이름 | §5.1, §3의 이름으로 확정 |

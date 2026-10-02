@@ -1,4 +1,5 @@
-// WF-05 캘린더 탭 (FR-06, BR-02, S-07). 필터 없는 목록을 월 그리드에 배치, 클릭 동작 없음 (§5)
+// WF-05 캘린더 탭 (FR-06, BR-02, S-07). 필터 없는 목록을 월 그리드에 배치, 날짜 클릭 시 해당 일 일정을 팝업(<dialog>)으로 표시
+import { useEffect, useRef, useState } from 'react';
 import type { Todo } from '../api/types';
 import { useTodos } from '../hooks/useTodos';
 import { useT } from '../i18n';
@@ -39,6 +40,12 @@ export default function TodoCalendarView() {
   const todos = useTodos(); // 캘린더는 필터를 적용하지 않는다 (§5)
   const t = useT();
   const today = todayKst();
+  const [selected, setSelected] = useState<string | null>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    if (selected) dialog.current?.showModal();
+  }, [selected]);
   const [y, m] = month.split('-');
 
   // 시작~종료 각 날짜 셀에 표시 (§5)
@@ -62,7 +69,7 @@ export default function TodoCalendarView() {
           if (!day.startsWith(month)) cls.push('calendar__cell--other');
           if (day === today) cls.push('calendar__cell--today');
           return (
-            <div key={day} className={cls.join(' ')} data-date={day}>
+            <div key={day} className={cls.join(' ')} data-date={day} onClick={() => setSelected(day)}>
               <span className="calendar__date">{Number(day.slice(8))}</span>
               {dayTodos.slice(0, MAX_CHIPS).map((todo) => (
                 <span key={todo.id} className={`chip chip--${todo.status} calendar__chip`}>{todo.title}</span>
@@ -72,6 +79,25 @@ export default function TodoCalendarView() {
           );
         })}
       </div>
+      {/* 바깥(backdrop) 클릭·Esc·닫기 버튼으로 닫는다 */}
+      <dialog ref={dialog} className="calendar__day" onClose={() => setSelected(null)} onClick={(e) => e.target === e.currentTarget && dialog.current?.close()}>
+        {selected && (
+          <>
+            <h3 className="calendar__day-title">{selected}</h3>
+            {todosOn(selected).length === 0 && <p>{t.calendar.empty}</p>}
+            {todosOn(selected).map((todo) => (
+              <div key={todo.id} className="calendar__day-item">
+                <span className={`chip chip--${todo.status}`}>{t.status[todo.status]}</span>
+                <span>{todo.title}</span>
+                <span className="calendar__more">{todo.startDate} ~ {todo.endDate}</span>
+              </div>
+            ))}
+            <div className="calendar__day-actions">
+              <button type="button" className="btn btn--secondary" onClick={() => dialog.current?.close()}>{t.calendar.close}</button>
+            </div>
+          </>
+        )}
+      </dialog>
     </div>
   );
 }

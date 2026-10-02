@@ -111,5 +111,5 @@
 <text x="231.0" y="860.0" font-size="13" font-weight="400" fill="#a0a0a0" text-anchor="start" text-decoration="line-through">완료</text>
 <rect x="273" y="845" width="81" height="20" rx="2" fill="#fde8e8"/>
 <text x="281.0" y="860.0" font-size="13" font-weight="400" fill="#e5483d" text-anchor="start">기한 초과</text>
-<text x="920.0" y="860.0" font-size="12" font-weight="400" fill="#a0a0a0" text-anchor="end">오늘 D = 2026-10-01 (KST) · 공통 테스트 데이터 TODO-A1~A6 · 칩 클릭 동작 없음</text>
+<text x="920.0" y="860.0" font-size="12" font-weight="400" fill="#a0a0a0" text-anchor="end">오늘 D = 2026-10-01 (KST) · 공통 테스트 데이터 TODO-A1~A6 · 날짜 클릭 시 해당 일 할일 팝업</text>
 </svg>

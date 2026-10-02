@@ -41,7 +41,7 @@ const ko = {
     endDate: '종료일자',
     dateOrder: '종료일자는 시작일자보다 빠를 수 없습니다.',
   },
-  calendar: { weekdays: ['일', '월', '화', '수', '목', '금', '토'], prev: '이전 달', next: '다음 달' },
+  calendar: { weekdays: ['일', '월', '화', '수', '목', '금', '토'], prev: '이전 달', next: '다음 달', empty: '이 날짜에 일정이 없습니다.', close: '닫기' },
   // '기본'은 서버 데이터 이름 그대로 표시
   categoryName: (name: string) => name,
   // 서버 메시지가 한국어이므로 그대로 표시
@@ -97,7 +97,7 @@ const en: Messages = {
     endDate: 'End date',
     dateOrder: 'The end date cannot be earlier than the start date.',
   },
-  calendar: { weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], prev: 'Previous month', next: 'Next month' },
+  calendar: { weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], prev: 'Previous month', next: 'Next month', empty: 'No todos on this date.', close: 'Close' },
   categoryName: (name) => (name === DEFAULT_CATEGORY_NAME ? 'Default' : name),
   // 알 수 없는 code(네트워크 오류 등)는 원래 메시지를 그대로 표시
   errorMessage: (e) => (e.code && EN_ERRORS[e.code]) || e.message,
