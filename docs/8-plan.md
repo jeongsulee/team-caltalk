@@ -189,8 +189,10 @@ flowchart LR
 - 수행 작업
   - `backend/src/db/pool.js`: `pg.Pool` 싱글턴 1개(`max`는 `DB_POOL_MAX`). DATE 컬럼(OID 1082)을 Date 객체가 아닌 `YYYY-MM-DD` 문자열로 반환하도록 pg 타입 파서를 설정한다 (원칙 1-7).
   - `backend/src/middlewares/errorHandler.js`: `AppError(status, code, message)`와 오류 핸들러. 모든 오류를 `{ "error": { "code", "message" } }`로 변환한다. `app.js`에 등록한다.
+  - `backend/src/routes/healthRoutes.js`(추가, 2026-10-02): 인증 없는 `GET /api/health`. 풀로 `SELECT 1`을 실행해 200 `{ status: 'ok', db: 'ok' }`, 실패·3초 초과 시 503 `{ status: 'error', db: 'error' }`(오류 원문 미노출).
 - 완료 조건
   - [x] `pool.js`를 여러 파일에서 import해도 Pool 인스턴스는 1개다.
+  - [x] `GET /api/health`가 인증 없이 200을 반환하고, DB 쿼리가 실패하면 503이며 오류 원문을 노출하지 않는다 (`infra.test.js`).
   - [x] `SELECT start_date FROM todos` 결과가 `"2026-10-07"` 형식 문자열이다 (Date 객체가 아님).
   - [x] 라우트에서 `AppError(400, "X", "msg")`를 던지면 HTTP 400과 `{ error: { code: "X", message: "msg" } }`가 응답된다.
   - [x] 예상치 못한 예외는 HTTP 500과 일반 메시지만 응답하고, 스택·SQL·비밀값이 응답에 포함되지 않는다.
@@ -260,7 +262,7 @@ flowchart LR
 - 선행 Task: BE-06
 - 수행 작업
   - `backend/src/middlewares/auth.js`: `Authorization: Bearer` Access Token 검증 → `req.user.id` 설정. 실패 시 401 `AppError`.
-  - `app.js`에서 `/api/users`, `/api/todos`, `/api/categories` 라우터 앞단에 적용한다 (공개 API는 `/api/auth/*`뿐).
+  - `app.js`에서 `/api/users`, `/api/todos`, `/api/categories` 라우터 앞단에 적용한다 (공개 API는 `/api/auth/*`와 `/api/health`뿐).
   - `auth.test.js`에 미들웨어 테스트 추가.
 - 완료 조건
   - [x] `E-02 미인증 접근`: 토큰 없음 → 401, 위조 토큰 → 401.
@@ -675,3 +677,4 @@ flowchart LR
 | 1.7 | 2026-10-01 | leejs05031119@gmail.com | FE-01~FE-14 완료 조건 체크, FE-15 다국어(한국어·영어) Task 추가·완료(§2 Task 목록·§3 선행 관계·§4.3·§5 갱신, 프론트 테스트 13개 통과) |
 | 1.8 | 2026-10-01 | leejs05031119@gmail.com | FE-16 다크/라이트 모드 Task 추가·완료(§2 Task 목록·§3 선행 관계·§4.3·§5 갱신, 프론트 테스트 17개 통과) |
 | 1.9 | 2026-10-02 | leejs05031119@gmail.com | 구현 반영: FE-12 캘린더 날짜 팝업·+N(§4.3·§5), uiStore 필드명(tab·month)·상태 라벨 위치 정정, BE-01 API 문서·NODE_ENV, FE-16 backdrop 색 예외, QA-01 E2E 통합 테스트(§2·§3·§4.4, 19개 시나리오 통과·BUG-01 수정) 추가 |
+| 1.10 | 2026-10-02 | leejs05031119@gmail.com | BE-02에 헬스 체크 `GET /api/health` 추가(수행 작업·완료 조건, BE-07 공개 API), 백엔드 테스트 121개 통과 |

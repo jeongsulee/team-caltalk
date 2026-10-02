@@ -101,6 +101,26 @@ test('BE-03 반환 맵으로 USER·CAT·TODO 13개 라벨의 id를 조회할 수
   for (const { id, title } of titles.rows) assert.equal(ids[title], id);
 });
 
+test('Health: /api/health는 DB 연결이 정상이면 인증 없이 200 { status: ok, db: ok }다', async () => {
+  const res = await fetch(`${server.baseUrl}/api/health`);
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { status: 'ok', db: 'ok' });
+});
+
+test('Health: DB 쿼리가 실패하면 503 { status: error, db: error }이고 오류 원문을 노출하지 않는다', async () => {
+  const original = pool.query;
+  pool.query = () => Promise.reject(new Error('connect ECONNREFUSED secret-host'));
+  try {
+    const res = await fetch(`${server.baseUrl}/api/health`);
+    assert.equal(res.status, 503);
+    const text = await res.text();
+    assert.deepEqual(JSON.parse(text), { status: 'error', db: 'error' });
+    assert.doesNotMatch(text, /secret-host/);
+  } finally {
+    pool.query = original;
+  }
+});
+
 test('BE-03 fixtures.js가 날짜를 하드코딩하지 않는다', () => {
   const src = fs.readFileSync(path.join(__dirname, 'fixtures.js'), 'utf8');
   assert.doesNotMatch(src, /\d{4}-\d{2}-\d{2}/);

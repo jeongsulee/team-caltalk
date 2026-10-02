@@ -140,7 +140,7 @@ pages  →  components  →  hooks(TanStack Query)  →  api  →  (fetch)
 - Access/Refresh는 서로 다른 시크릿으로 서명한다. (이유: 한쪽 유출 시 다른 쪽 보호)
 - HS256으로 서명하고 payload에는 `sub`(사용자 id)만 담는다. 재발급(`/api/auth/refresh`)은 Access Token만 새로 발급하며 Refresh Token은 갱신하지 않으므로 로그인 7일 후에는 다시 로그인해야 한다. 클라이언트는 `/api/auth/*` 외 요청이 401이면 재발급을 1회 시도한다.
 - Access Token 15분, Refresh Token 7일. 두 토큰 모두 `localStorage`에 저장하고 접근은 `client.ts` 한 곳에서만 한다(XSS 노출 위험은 수용). 서버는 Refresh Token을 저장·폐기하지 않는 무상태이며, 로그아웃은 클라이언트 토큰 삭제다.
-- 보호 라우트는 모두 인증 미들웨어를 거친다. 공개 API는 `/api/auth/signup`, `/api/auth/login`, `/api/auth/refresh`뿐이다. (API 문서 `/api-docs`는 개발 환경에서만 인증 없이 제공한다, §5.6)
+- 보호 라우트는 모두 인증 미들웨어를 거친다. 공개 API는 `/api/auth/signup`, `/api/auth/login`, `/api/auth/refresh`, `/api/health`뿐이다. (API 문서 `/api-docs`는 개발 환경에서만 인증 없이 제공한다, §5.6)
 
 ### 5.3 비밀번호
 - 평문 저장·로깅 금지. 단방향 해시(솔트 포함, bcrypt)로만 저장한다. 비용 인자는 10(코드에 고정).
@@ -165,6 +165,7 @@ pages  →  components  →  hooks(TanStack Query)  →  api  →  (fetch)
 - 오류 로그에 비밀번호·토큰 원문을 남기지 않는다. 백엔드는 예상치 못한 오류만 `console.error`로 출력하고, 환경변수는 누락된 키 이름만 출력한다. 프론트는 개발 모드(`import.meta.env.DEV`)에서만 API 오류를 콘솔에 남긴다. 로깅 도구·모니터링·배포 환경은 이번 범위 외.
 - CORS는 `CORS_ORIGIN`에 지정한 출처만 허용한다.
 - DB 마이그레이션 도구는 쓰지 않는다. 스키마 원본은 `backend/src/db/schema.sql` 한 파일이며 `docs/schema.sql`은 같은 내용의 문서용 사본이다(ORM 금지, 마이그레이션 도구 불필요한 규모).
+- 헬스 체크 `GET /api/health`는 인증 없이 DB에 `SELECT 1`을 실행해 정상이면 200 `{ status: 'ok', db: 'ok' }`, 실패하거나 3초 안에 응답이 없으면 503 `{ status: 'error', db: 'error' }`를 반환한다. 로드밸런서·모니터링용이라 §3 오류 형식의 예외이며 연결 정보·오류 원문은 응답하지 않는다. 인프라 점검이므로 services·repositories를 거치지 않고 `pool`을 직접 쓴다.
 - API 명세는 `backend/swagger.yaml`(OpenAPI 3.0) 한 파일로 관리하고, `/api-docs`에서 Swagger UI로, `/api-docs/swagger.yaml`에서 원본으로 제공한다. Swagger UI는 CDN(`swagger-ui-dist@5`)에서 로드해 npm 의존성을 추가하지 않는다. `NODE_ENV=production`이면 등록하지 않는다(404). 명세의 서버 주소 기본 포트는 `3000`이다.
 
 ## 6. 디렉토리 구조
@@ -242,7 +243,8 @@ backend/
 │  │  ├─ userRoutes.js            # /api/users/me (FR-02)
 │  │  ├─ todoRoutes.js            # /api/todos (FR-03~07)
 │  │  ├─ categoryRoutes.js        # /api/categories (FR-08)
-│  │  └─ docsRoutes.js            # /api-docs Swagger UI (개발 환경만, §5.6)
+│  │  ├─ docsRoutes.js            # /api-docs Swagger UI (개발 환경만, §5.6)
+│  │  └─ healthRoutes.js          # /api/health 헬스 체크 (DB 연결 확인, §5.6)
 │  ├─ services/                   # 비즈니스 규칙(BR) 판단
 │  │  ├─ authService.js           # 가입(BR-07, '기본' 카테고리 생성 BR-10)·로그인·토큰 발급/재발급
 │  │  ├─ userService.js           # 내 정보 수정
@@ -260,7 +262,7 @@ backend/
 │  ├─ categories.test.js          # S-09, E-09~10 통합
 │  ├─ auth.test.js                # S-01~03, E-01~02 통합
 │  ├─ config.test.js              # BE-01 환경변수 검증·CORS·.env.example
-│  ├─ infra.test.js               # BE-02 풀·오류 핸들러, BE-03 픽스처, Swagger UI
+│  ├─ infra.test.js               # BE-02 풀·오류 핸들러·헬스 체크, BE-03 픽스처, Swagger UI
 │  ├─ schema.test.js              # DB-01 제약·인덱스
 │  └─ seed.test.js                # DB-02 시드 데이터
 ├─ swagger.yaml                   # REST API 명세 (OpenAPI 3.0)
@@ -323,3 +325,4 @@ test/e2e/
 | 1.7 | 2026-10-01 | leejs05031119@gmail.com | 다크/라이트 모드 반영: stores에 테마 추가(§2.2), §6.1에 `ThemeToggle.tsx`·`theme.test.tsx`와 테마 적용 방식 추가, §7 결정 추가 |
 | 1.8 | 2026-10-02 | leejs05031119@gmail.com | §7 캘린더 날짜 클릭 팝업(`<dialog>`) 반영 |
 | 1.9 | 2026-10-02 | leejs05031119@gmail.com | 구현 반영: 1-6 프론트 KST 표시 예외, §2.2 공통 모듈·Header 예외·페이지 import 예외, §3 `INTERNAL_ERROR`·잘못된 JSON, 4-11 E2E 원칙, §5.2 JWT 세부(HS256·sub·재발급 범위), §5.3 bcrypt 비용 10, §5.6 로깅·schema 사본, §6.1·6.2 파일 추가, §6.3 E2E 구조 추가 |
+| 1.10 | 2026-10-02 | leejs05031119@gmail.com | 헬스 체크 `GET /api/health` 반영(§5.2 공개 API, §5.6, §6.2 `healthRoutes.js`) |

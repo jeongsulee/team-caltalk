@@ -4,7 +4,7 @@
 
 ## 1. 전체 기술 아키텍처
 
-브라우저(React) → Express(routes → services → repositories) → pg → PostgreSQL 17 순으로 요청이 흐른다. 인증 미들웨어는 routes 앞단에서 Access Token을 검증한다(공개 API는 `/api/auth/*`뿐). 개발 환경에서는 `backend/swagger.yaml`을 `/api-docs` Swagger UI로 함께 제공한다(`NODE_ENV=production`이면 미등록, 5-project-principle §5.6).
+브라우저(React) → Express(routes → services → repositories) → pg → PostgreSQL 17 순으로 요청이 흐른다. 인증 미들웨어는 routes 앞단에서 Access Token을 검증한다(공개 API는 `/api/auth/*`와 헬스 체크 `/api/health`뿐). `/api/health`는 DB에 `SELECT 1`을 보내 연결 상태를 200/503으로 응답한다. 개발 환경에서는 `backend/swagger.yaml`을 `/api-docs` Swagger UI로 함께 제공한다(`NODE_ENV=production`이면 미등록, 5-project-principle §5.6).
 
 ```mermaid
 flowchart LR
@@ -28,6 +28,8 @@ flowchart LR
         DOCS["/api-docs<br/>(Swagger UI, 개발 환경만)"]
         MW -->|"/api/users·categories·todos"| AUTH --> R
         MW -->|"/api/auth/*"| R
+        HC["/api/health<br/>(SELECT 1, 200/503)"]
+        MW --> HC
         MW --> DOCS
         R --> S --> REPO
         R -.->|"오류"| EH
@@ -37,6 +39,7 @@ flowchart LR
 
     CL -->|"REST(JSON) + Access Token"| MW
     REPO -->|"pg (Pool)"| DB
+    HC -->|"pg (Pool)"| DB
 ```
 
 ### 1.1 기술 스택
@@ -132,3 +135,4 @@ flowchart TD
 | 1.3 | 2026-09-30 | leejs05031119@gmail.com | 8-plan §5 미정 항목 결정 반영 |
 | 1.4 | 2026-10-01 | leejs05031119@gmail.com | Swagger UI(`/api-docs`, 개발 환경만) 반영 |
 | 1.5 | 2026-10-02 | leejs05031119@gmail.com | 구현 반영: §1 다이어그램에 api/client.ts·cors/json·errorHandler·`/api/auth/*` 인증 제외 경로 추가, §1.1 기술 스택 표 추가, §2 재발급 조건·Refresh Token 미갱신·실패 처리, §3 프론트 KST 표시 예외, §4 다국어·다크 모드 |
+| 1.6 | 2026-10-02 | leejs05031119@gmail.com | 헬스 체크 `/api/health`(인증 없음, DB 연결 확인)를 §1 설명·다이어그램에 추가 |

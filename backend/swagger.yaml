@@ -4,7 +4,7 @@ info:
   version: 1.1.0
   description: |
     cal-todo 백엔드 REST API. 기준 문서: docs/8-plan.md §4(BE-05~BE-14)·§5, docs/5-project-principle.md §3·§5.
-    - 공개 API는 /api/auth/* 뿐이며 그 외는 Access Token(JWT, 15분)이 필요하다 (BR-01). 이 문서(/api-docs)는 개발 환경에서만 제공된다 (NODE_ENV=production이면 미등록).
+    - 공개 API는 /api/auth/*, /api/health 뿐이며 그 외는 Access Token(JWT, 15분)이 필요하다 (BR-01). 이 문서(/api-docs)는 개발 환경에서만 제공된다 (NODE_ENV=production이면 미등록).
     - JSON 필드는 camelCase, 날짜는 YYYY-MM-DD, 식별자는 정수.
     - 오류 응답은 항상 { "error": { "code", "message" } } 형식이다. code 값은 VALIDATION_ERROR(400), DEFAULT_CATEGORY_PROTECTED(400), UNAUTHORIZED(401), INVALID_CREDENTIALS(401), NOT_FOUND(404), EMAIL_DUPLICATED(409), CATEGORY_NAME_DUPLICATED(409)로 확정되어 있다 (docs/5-project-principle.md §3). 예상치 못한 서버 오류는 500 INTERNAL_ERROR이며 스택·SQL은 응답하지 않는다.
     - 본문이 올바른 JSON이 아니면 400 VALIDATION_ERROR.
@@ -20,6 +20,7 @@ servers:
         description: PORT 환경변수
 
 tags:
+  - name: health
   - name: auth
   - name: users
   - name: categories
@@ -29,6 +30,34 @@ security:
   - bearerAuth: []
 
 paths:
+  /api/health:
+    get:
+      tags: [health]
+      summary: 헬스 체크 (서버·DB 연결 상태)
+      description: |
+        DB에 `SELECT 1`을 실행해 연결 상태를 확인한다. 인증이 필요 없다.
+        DB가 3초 안에 응답하지 않거나 오류면 503이다. 로드밸런서·모니터링용이라 공통 오류 형식 대신 아래 형식으로 응답하며, 연결 정보·오류 원문은 포함하지 않는다.
+      security: []
+      responses:
+        "200":
+          description: 정상
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+              example:
+                status: ok
+                db: ok
+        "503":
+          description: DB 연결 실패
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+              example:
+                status: error
+                db: error
+
   /api/auth/signup:
     post:
       tags: [auth]
@@ -493,6 +522,16 @@ components:
         minimum: 1
 
   schemas:
+    Health:
+      type: object
+      required: [status, db]
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        db:
+          type: string
+          enum: [ok, error]
     User:
       type: object
       description: 비밀번호·비밀번호 해시는 포함하지 않는다.

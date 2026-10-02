@@ -8,6 +8,7 @@ const userRoutes = require('./routes/userRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const todoRoutes = require('./routes/todoRoutes');
 const docsRoutes = require('./routes/docsRoutes');
+const healthRoutes = require('./routes/healthRoutes');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(cors({ origin: [config.corsOrigin] }));
 app.use(express.json());
 
 if (!config.isProduction) app.use('/api-docs', docsRoutes);
+app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authenticate, userRoutes);
 app.use('/api/categories', authenticate, categoryRoutes);
