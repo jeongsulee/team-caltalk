@@ -57,8 +57,9 @@
 | FE-14 | 프론트 | 프론트 테스트 (BR-04·BR-05·필터 전환) | FE-09, FE-11 | Day 2 |
 | FE-15 | 프론트 | 다국어 (한국어·영어) | FE-13, FE-14 | Day 2 |
 | FE-16 | 프론트 | 다크/라이트 모드 | FE-15 | Day 2 |
+| QA-01 | 테스트 | E2E 통합 테스트 (S-01~S-09, E-01~E-10) | FE-16 | Day 2 |
 
-영역별 개수: DB 2, 백엔드 14, 프론트 16, 합계 32.
+영역별 개수: DB 2, 백엔드 14, 프론트 16, 테스트 1, 합계 33.
 
 ## 3. 선행 관계 요약
 
@@ -118,6 +119,7 @@ flowchart LR
     FE13 --> FE15["FE-15"]
     FE14 --> FE15
     FE15 --> FE16["FE-16"]
+    FE16 --> QA01["QA-01"]
 ```
 
 ## 4. 영역별 Task 상세
@@ -170,6 +172,7 @@ flowchart LR
   - `backend/package.json`: express, pg, jsonwebtoken, cors, bcrypt(§5 확정)만 의존성으로 추가한다. dotenv는 넣지 않고 Node 내장 `--env-file`을 쓴다. Prisma·TypeScript 금지 (PRD §6).
   - `backend/src/config.js`: 필수 키(`DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`, `DB_POOL_MAX`, `PORT`, `CORS_ORIGIN`)를 읽고 검증한다. `process.env` 접근은 이 파일에서만 한다.
   - `backend/src/app.js`(express.json, cors(`CORS_ORIGIN`) 조립), `backend/src/server.js`(config 검증 후 기동), `backend/.env.example`(키 목록. 시크릿·연결 문자열은 비우고 `JWT_ACCESS_EXPIRES_IN=15m`, `JWT_REFRESH_EXPIRES_IN=7d`, `DB_POOL_MAX=20`은 §5 값으로 채운다).
+  - `backend/src/routes/docsRoutes.js`: `/api-docs` Swagger UI(CDN)와 `/api-docs/swagger.yaml`(§5 확정). 선택 키 `NODE_ENV`도 `config.js`에서 읽어 `production`이면 등록하지 않는다(`config.isProduction`).
   - 루트 `.gitignore`에 `.env`가 없으면 추가한다.
 - 완료 조건
   - [x] 필수 키 중 하나를 빼고 `server.js`를 실행하면 서버가 기동되지 않고, 누락된 키 이름만 출력한다 (비밀값은 출력하지 않는다).
@@ -177,6 +180,7 @@ flowchart LR
   - [x] `backend/src` 안에서 `process.env`를 참조하는 파일은 `config.js` 하나뿐이다 (grep으로 확인).
   - [x] `CORS_ORIGIN`과 다른 Origin의 요청은 CORS 허용 헤더를 받지 못한다.
   - [x] `.env.example`에 위 8개 키가 있고 시크릿·연결 문자열은 값이 비어 있으며 만료·풀 크기는 §5 값(`15m`, `7d`, `20`)이 들어 있다. `.env`는 git 추적 대상에서 제외된다.
+  - [x] `/api-docs`가 인증 없이 열리고 `NODE_ENV=production`에서는 404다.
 
 #### BE-02 pg 풀·오류 핸들러
 - 관련 ID: 원칙 1-7, 5.5, §3(오류 응답 형식)
@@ -197,7 +201,7 @@ flowchart LR
 - 선행 Task: DB-02
 - 수행 작업
   - `backend/package.json`에 `test` 스크립트를 추가한다 (Node 내장 `node --test`, 추가 의존성 없음. §5 확정).
-  - `backend/tests/fixtures.js`: DB-02의 `seed()`를 재사용하는 `resetAndSeed()`, 라벨 → id 맵, `TEST_PASSWORD` 재노출. 시드 로직을 복제하지 않는다.
+  - `backend/tests/fixtures.js`: DB-02의 `seed()`를 재사용하는 `resetAndSeed()`, 라벨 → id 맵, `TEST_PASSWORD` 재노출, 서버 기동·요청·토큰 헬퍼. DB 이름이 `_test`로 끝나지 않으면 즉시 실패한다. 시드 로직을 복제하지 않는다.
   - 테스트는 `DATABASE_URL`이 테스트 DB를 가리킬 때만 실행한다.
 - 완료 조건
   - [x] `npm test` 실행 시 `tests/` 아래 테스트가 실행된다.
@@ -225,7 +229,7 @@ flowchart LR
 - 선행 Task: DB-01, BE-02, BE-03
 - 수행 작업
   - `backend/src/repositories/userRepository.js`(이메일 조회·사용자 생성), `backend/src/repositories/categoryRepository.js`(카테고리 생성 함수만 우선 작성, BE-09에서 확장).
-  - `backend/src/services/authService.js`의 `signup`: 이메일 중복 시 `AppError`(BR-07), 비밀번호 해시 저장, 사용자 생성과 '기본' 카테고리 생성을 한 트랜잭션으로 처리한다 (§5 확정). 이메일은 앞뒤 공백 제거·소문자로 정규화해 조회·저장한다 (BR-07). '기본' 이름은 `DEFAULT_CATEGORY_NAME` 상수 한 곳에서만 참조한다.
+  - `backend/src/services/authService.js`의 `signup`: 이메일 중복 시 `AppError`(BR-07), 비밀번호 해시 저장, 사용자 생성과 '기본' 카테고리 생성을 한 트랜잭션으로 처리한다 (§5 확정). 이메일은 앞뒤 공백 제거·소문자로 정규화해 조회·저장한다 (BR-07). 서비스 코드에서 '기본' 이름은 `DEFAULT_CATEGORY_NAME` 상수 한 곳에서만 참조한다 (시드 데이터 표는 예외).
   - `backend/src/routes/authRoutes.js`: `POST /api/auth/signup` (이메일·비밀번호·이름 필수값 형식 검증). 응답에 비밀번호 해시를 포함하지 않는다. `app.js`에 `/api/auth` 등록.
   - `backend/tests/auth.test.js`에 S-01, E-01 테스트.
 - 완료 조건
@@ -379,7 +383,7 @@ flowchart LR
 
 공통 사항
 - 서버 데이터는 TanStack Query만, UI 상태는 Zustand만 사용한다 (PRD §6, 원칙 2.2). 필터링·상태 재계산은 클라이언트에서 하지 않는다 (원칙 1-4, 2.2).
-- 프론트 완료 조건 중 "화면 확인"은 BE 서버와 DB-02 시드를 띄운 상태(USER-A 로그인)에서 브라우저로 확인한다.
+- 프론트 완료 조건 중 "화면 확인"은 BE 서버와 DB-02 시드를 띄운 상태(USER-A 로그인)에서 브라우저로 확인한다. QA-01 E2E 통합 테스트는 기존 데이터를 지우지 않도록 `test/e2e/setup.mjs`로 API를 통해 공통 데이터를 만든다.
 
 #### FE-01 프로젝트 셋업
 - 관련 ID: PRD §6, 원칙 §3, §5.1
@@ -403,7 +407,7 @@ flowchart LR
   - `frontend/src/api/types.ts`: `Todo`, `Category`, `User`, `TodoStatus` 타입을 직접 정의한다 (타입 공유 패키지 금지, 원칙 2.3).
   - `frontend/src/api/client.ts`: fetch 래퍼. Access Token 첨부, 401 수신 시 `POST /api/auth/refresh`로 1회 재발급 후 원 요청 재시도, 재발급 실패 시 토큰 삭제 후 `/login`으로 이동한다. 로그인·가입·재발급 요청 자체는 이 재발급 루프에서 제외한다. 토큰은 `localStorage`(§5 확정)에 두되 접근은 이 파일 한 곳으로 한정한다. 오류 응답의 `error.code`/`message`를 담은 `ApiError`를 던진다.
 - 완료 조건
-  - [x] 백엔드 `JWT_ACCESS_EXPIRES_IN`을 짧게 설정한 개발 환경에서 Access Token 만료 후 요청하면, 재발급 1회 후 원 요청이 성공하고 사용자에게 오류가 보이지 않는다 (arch §2 흐름).
+  - [x] 백엔드 `JWT_ACCESS_EXPIRES_IN`을 짧게 설정한 개발 환경에서 Access Token 만료 후 요청하면, 재발급 1회 후 원 요청이 성공하고 사용자에게 오류가 보이지 않는다 (arch §2 흐름, 수동 확인 기준. QA-01 E2E에서는 재현하지 않음, test/e2e/test-report.md §5).
   - [x] `E-02` Refresh Token까지 만료/삭제된 상태에서 요청하면 저장된 토큰이 지워지고 `/login`으로 이동한다 (BR-01).
   - [x] 이 재발급·로그인 이동 처리가 `client.ts` 한 곳에만 존재한다 (다른 파일에 없음, grep 확인).
   - [x] `api/`가 store·컴포넌트를 import하지 않는다 (원칙 2.2).
@@ -506,8 +510,8 @@ flowchart LR
 - 배정일: Day 2
 - 선행 Task: FE-03, FE-07, BE-14
 - 수행 작업
-  - `frontend/src/pages/TodoListPage.tsx`: `/` 라우트(FE-03의 placeholder 교체). 목록/캘린더 탭 전환(`uiStore.activeTab`), 캘린더 탭 본문은 FE-12 전까지 빈 자리로 둔다. "+ 할일 등록" 링크(`/todos/new`).
-  - `frontend/src/components/TodoItem.tsx`: 제목, 카테고리, 시작·종료일자, 서버가 준 `status`를 `constants.ts` 라벨로 표시(재계산 금지), 완료 체크박스(`isCompleted` 토글, 해제하면 되돌림, BR-12), 수정 링크, 삭제 버튼(`window.confirm` 승인 후 요청, §5 확정). 조건에 맞는 할일이 없으면 "조건에 맞는 할일이 없습니다."를 표시한다 (§5 확정).
+  - `frontend/src/pages/TodoListPage.tsx`: `/` 라우트(FE-03의 placeholder 교체). 목록/캘린더 탭 전환(`uiStore.tab`), 캘린더 탭 본문은 FE-12 전까지 빈 자리로 둔다. "+ 할일 등록" 링크(`/todos/new`).
+  - `frontend/src/components/TodoItem.tsx`: 제목, 카테고리, 시작·종료일자, 서버가 준 `status`를 `i18n.ts` 라벨(`t.status`, FE-15에서 이동)로 표시(재계산 금지), 완료 체크박스(`isCompleted` 토글, 해제하면 되돌림, BR-12), 수정 링크, 삭제 버튼(`window.confirm` 승인 후 요청, §5 확정). 조건에 맞는 할일이 없으면 "조건에 맞는 할일이 없습니다."를 표시한다 (§5 확정).
 - 완료 조건
   - [x] `S-07` USER-A로 목록 탭에 TODO-A1~A6 6건이 표시되고 TODO-B1은 없다.
   - [x] `E-06` 각 항목의 상태 라벨이 A1 시작 전, A2 진행중, A3 진행중, A4 기한 초과, A5 완료, A6 진행중이다.
@@ -536,13 +540,15 @@ flowchart LR
 - 배정일: Day 2
 - 선행 Task: FE-10
 - 수행 작업
-  - `frontend/src/pages/TodoCalendarView.tsx`: 월별 캘린더 그리드를 라이브러리 없이 직접 렌더링한다. 이전/다음 달 이동(`uiStore.calendarMonth`). 필터 없는 `GET /api/todos` 결과를 월 셀에 배치한다 (조회 파라미터 없음, §5 확정). 시작일자~종료일자 각 날짜 셀에 제목을 표시한다 (§5 확정). 캘린더 필터 적용은 구현하지 않는다 (§5 확정). 날짜 셀을 클릭하면 그날 할일 목록을 네이티브 `<dialog>` 팝업으로 보여준다.
+  - `frontend/src/pages/TodoCalendarView.tsx`: 월별 캘린더 그리드를 라이브러리 없이 직접 렌더링한다. 이전/다음 달 이동(`uiStore.month`). 필터 없는 `GET /api/todos` 결과를 월 셀에 배치한다 (조회 파라미터 없음, §5 확정). 시작일자~종료일자 각 날짜 셀에 제목을 표시한다 (§5 확정). 캘린더 필터 적용은 구현하지 않는다 (§5 확정). 한 셀에 최대 3개 표시 후 `+N`. 날짜 셀을 클릭하면 그날 할일(상태·제목·기간)을 네이티브 `<dialog>` 팝업으로 보여주며, Esc·바깥 클릭·닫기 버튼으로 닫는다.
   - `TodoListPage`의 캘린더 탭에서 이 뷰를 렌더링한다.
 - 완료 조건
   - [x] `S-07` 캘린더 탭 전환 시 현재 월 그리드에 USER-A 할일만 표시되고 USER-B 할일은 없다.
   - [x] 시드 기준 TODO-A2(D ~ D+2)가 D, D+1, D+2 세 날짜 셀에 표시된다 (같은 월 내일 때).
   - [x] 이전/다음 달 버튼으로 표시 월이 바뀌고, 해당 월과 겹치지 않는 할일은 표시되지 않는다.
   - [x] 목록 탭 ↔ 캘린더 탭을 오가도 목록 탭의 필터 선택이 유지된다.
+  - [x] 날짜 셀 클릭 시 해당 일 할일이 `<dialog>`로 표시되고, 일정이 없으면 "이 날짜에 일정이 없습니다."가 표시된다 (QA-01, 스크린샷 08·09).
+  - [x] 모바일 폭(390px)에서 팝업이 화면 안에 들어온다 (QA-01 BUG-01 수정, 스크린샷 31).
 
 #### FE-13 반응형 배치
 - 관련 ID: PRD §3, §8 / 와이어프레임 §5 / WF-04, WF-06 모바일
@@ -568,7 +574,7 @@ flowchart LR
   - [x] `E-03` 종료일자 < 시작일자로 제출하면 오류 문구가 표시되고 등록 API가 호출되지 않는다. 같은 날짜로 제출하면 호출된다.
   - [x] `BR-05` 고정된 '오늘'(KST) 기준으로 초기 시작일자가 오늘+7일, 초기 종료일자가 시작일자와 같다.
   - [x] `E-08` `uiStore`에서 상태 필터를 연속 선택하면 마지막 값 하나만 남는다.
-  - [x] `npm test`가 모두 통과하고, 각 테스트 이름에 시나리오/BR ID가 포함된다.
+  - [x] `npm test`가 모두 통과하고, FE-14 대상 테스트(TodoFormPage·uiStore) 이름에 시나리오/BR ID가 포함된다.
 
 #### FE-15 다국어 (한국어·영어)
 - 관련 ID: PRD §3, §8 / 원칙 §3, §6.1 / 스타일 가이드 §2.3, §5.1 / E-02, BR-10
@@ -593,16 +599,31 @@ flowchart LR
 - 배정일: Day 2
 - 선행 Task: FE-15
 - 수행 작업
-  - `frontend/src/index.css`: 상태 칩 색을 토큰(`--chip-{status}-fg/bg`)으로 바꾸고, `:root[data-theme='dark']`에서 모든 색 토큰을 다시 정의한다(`color-scheme: dark` 포함). 규칙 안의 하드코딩 색은 주요 버튼 흰 글자만 남긴다.
+  - `frontend/src/index.css`: 상태 칩 색을 토큰(`--chip-{status}-fg/bg`)으로 바꾸고, `:root[data-theme='dark']`에서 모든 색 토큰을 다시 정의한다(`color-scheme: dark` 포함). 규칙 안의 하드코딩 색은 주요 버튼 흰 글자만 남긴다 (이후 FE-12 날짜 팝업 backdrop `rgb(0 0 0 / 0.4)`는 두 테마 공통으로 예외).
   - `uiStore`에 `theme`·`toggleTheme` 추가. 언어와 함께 localStorage에 유지하고, 초기값은 OS 설정(`prefers-color-scheme`). `App.tsx`가 `<html data-theme>`을 갱신한다.
   - `frontend/src/components/ThemeToggle.tsx`: 공통 헤더와 WF-01·WF-02 폼 위, 언어 선택 왼쪽에 배치. 라벨은 `i18n.ts`(다크 모드/라이트 모드, Dark mode/Light mode).
   - `frontend/src/theme.test.tsx` 추가 (`vite.config.ts`의 테스트 설정 `css: true`).
 - 완료 조건
   - [x] 헤더·로그인·가입 화면의 전환 버튼으로 다크/라이트가 즉시 바뀌고, 새로고침·페이지 이동 후에도 선택한 모드가 유지된다.
-  - [x] 다크 모드에서 배경·글자·칩·캘린더 오늘 강조·날짜 입력 등 모든 화면 요소가 다크 토큰을 따른다 (`index.css` 규칙 안에 주요 버튼 흰 글자 외 하드코딩 색 없음).
+  - [x] 다크 모드에서 배경·글자·칩·캘린더 오늘 강조·날짜 입력 등 모든 화면 요소가 다크 토큰을 따른다 (`index.css` 규칙 안에 주요 버튼 흰 글자와 날짜 팝업 backdrop 외 하드코딩 색 없음).
   - [x] 다크 블록이 라이트의 색 토큰을 빠짐없이 다시 정의한다 (`theme.test.tsx`, 토큰 하나를 지우면 실패함을 확인).
   - [x] `npm test`(17개)·`npx tsc --noEmit`·`npm run build`가 통과한다.
   - [x] 모바일 폭(375px)에서 두 테마·두 언어 모두 가로 스크롤이 없다.
+
+### 4.4 테스트
+
+#### QA-01 E2E 통합 테스트
+- 관련 ID: 사용자 시나리오 S-01~S-09, E-01~E-10
+- 배정일: Day 2
+- 선행 Task: FE-16
+- 수행 작업
+  - `test/e2e/setup.mjs`: DB를 비우는 DB-02 시드 대신 API로 고유 계정(USER-A·B)과 공통 테스트 데이터(시나리오 §3)를 만든다.
+  - BE·FE 개발 서버를 띄운 상태에서 Playwright MCP로 시나리오별 브라우저 검증과 스크린샷을 수행한다 (자동화 스크립트·CI 없음).
+  - `test/e2e/test-report.md`에 결과·스크린샷·발견 결함을 기록한다.
+- 완료 조건
+  - [x] 19개 시나리오(S-01~S-09, E-01~E-10)가 모두 통과한다.
+  - [x] 캘린더 날짜 팝업·`+N`·반응형·다크 모드를 추가로 검증한다.
+  - [x] 발견 결함(BUG-01 모바일 팝업 넘침)을 수정하고 재검증한다.
 
 ## 5. 미정 항목 결정
 
@@ -629,9 +650,9 @@ flowchart LR
 | 이메일 대소문자 | 서비스에서 앞뒤 공백 제거·소문자 정규화 후 저장·조회(BR-07). DB는 단순 UNIQUE 유지 | BE-05, BE-06 |
 | 모바일 헤더 메뉴·날짜 선택 | 헤더는 줄바꿈 배치, 날짜 선택은 `<input type="date">` | FE-09, FE-13 |
 | 목록 정렬 | `start_date`, `id` 오름차순 | BE-12 |
-| 다국어 (추가 결정, 2026-10-01) | 한국어(기본)·영어. 라이브러리 없이 `i18n.ts` 사전, 언어는 `uiStore`에 두고 localStorage 유지(초기값 브라우저 언어). 서버 오류는 `error.code`로 프론트 번역, 백엔드 변경 없음. 사용자 데이터는 번역하지 않고 '기본'만 영어 표시 'Default' | FE-15 |
+| 다국어 (추가 결정, 2026-10-01) | 한국어·영어. 라이브러리 없이 `i18n.ts` 사전, 언어는 `uiStore`에 두고 localStorage 유지(초기값 브라우저 언어). 서버 오류는 `error.code`로 프론트 번역, 백엔드 변경 없음. 사용자 데이터는 번역하지 않고 '기본'만 영어 표시 'Default' | FE-15 |
 | 다크/라이트 모드 (추가 결정, 2026-10-01) | 라이브러리 없이 CSS 색 토큰을 `:root[data-theme='dark']`에서 재정의. 초기값 OS 설정, 전환 시 localStorage 유지. 전환 버튼은 언어 선택 왼쪽 | FE-16 |
-| 테스트 러너·커버리지 | 백엔드 `node --test`(`npm run test:coverage`에서 `src/` 라인 커버리지 90% 기준), 프론트 Vitest + Testing Library(커버리지 수치 목표 없음) | BE-03, FE-14 |
+| 테스트 러너·커버리지 | 백엔드 `node --test`(`npm run test:coverage`에서 `src/` 라인 커버리지 90% 기준), 프론트 Vitest + Testing Library(커버리지 수치 목표 없음), E2E는 Playwright MCP 수동 실행(`test/e2e`) | BE-03, FE-14, QA-01 |
 | API 문서 | `backend/swagger.yaml`을 `/api-docs` Swagger UI로 제공(CDN 로드, 의존성 추가 없음). `NODE_ENV=production`이면 등록하지 않는다 | BE-01 |
 | 빌드 도구·라우터·해시 라이브러리 | Vite, react-router, bcrypt(기본 비용 인자) | BE-01, FE-01 |
 | 오류 응답 형식·상태 코드 영문 값·error.code·환경변수·API 경로 이름 | 5-project-principle.md 제안을 그대로 확정 (`{error:{code,message}}`, `upcoming`/`in_progress`/`completed`/`overdue`). error.code는 `VALIDATION_ERROR`(400), `DEFAULT_CATEGORY_PROTECTED`(400), `UNAUTHORIZED`(401), `INVALID_CREDENTIALS`(401), `NOT_FOUND`(404), `EMAIL_DUPLICATED`(409), `CATEGORY_NAME_DUPLICATED`(409) 7종 (원칙 §3) | BE-01~BE-14, FE-02 |
@@ -653,3 +674,4 @@ flowchart LR
 | 1.6 | 2026-10-01 | leejs05031119@gmail.com | 백엔드 구현 반영: §5에 API 문서(Swagger UI, 개발 환경만) 추가, 백엔드 커버리지 90% 기준 반영 (백엔드 테스트 119개 통과) |
 | 1.7 | 2026-10-01 | leejs05031119@gmail.com | FE-01~FE-14 완료 조건 체크, FE-15 다국어(한국어·영어) Task 추가·완료(§2 Task 목록·§3 선행 관계·§4.3·§5 갱신, 프론트 테스트 13개 통과) |
 | 1.8 | 2026-10-01 | leejs05031119@gmail.com | FE-16 다크/라이트 모드 Task 추가·완료(§2 Task 목록·§3 선행 관계·§4.3·§5 갱신, 프론트 테스트 17개 통과) |
+| 1.9 | 2026-10-02 | leejs05031119@gmail.com | 구현 반영: FE-12 캘린더 날짜 팝업·+N(§4.3·§5), uiStore 필드명(tab·month)·상태 라벨 위치 정정, BE-01 API 문서·NODE_ENV, FE-16 backdrop 색 예외, QA-01 E2E 통합 테스트(§2·§3·§4.4, 19개 시나리오 통과·BUG-01 수정) 추가 |

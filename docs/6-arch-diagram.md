@@ -9,32 +9,61 @@
 ```mermaid
 flowchart LR
     subgraph Browser["브라우저 (반응형 웹)"]
-        UI["React 19 + TypeScript"]
+        UI["React 19 + TypeScript<br/>(react-router)"]
         ZS["Zustand<br/>(UI 상태)"]
         TQ["TanStack Query<br/>(서버 상태)"]
+        CL["api/client.ts<br/>(fetch, 토큰 첨부·재발급)"]
         UI --- ZS
         UI --- TQ
+        TQ --> CL
     end
 
     subgraph Server["서버 (Node.js + Express)"]
+        MW["cors · express.json"]
         AUTH["인증 미들웨어<br/>(Access Token 검증 → req.user.id)"]
         R["routes<br/>(HTTP·입력 형식 검증)"]
         S["services<br/>(비즈니스 규칙 BR 판단)"]
         REPO["repositories<br/>(파라미터화 SQL)"]
-        AUTH --> R --> S --> REPO
+        EH["errorHandler<br/>({ error: { code, message } })"]
+        DOCS["/api-docs<br/>(Swagger UI, 개발 환경만)"]
+        MW -->|"/api/users·categories·todos"| AUTH --> R
+        MW -->|"/api/auth/*"| R
+        MW --> DOCS
+        R --> S --> REPO
+        R -.->|"오류"| EH
     end
 
     DB[("PostgreSQL 17")]
 
-    TQ -->|"REST(JSON) + Access Token"| AUTH
+    CL -->|"REST(JSON) + Access Token"| MW
     REPO -->|"pg (Pool)"| DB
 ```
+
+### 1.1 기술 스택
+
+| 구분 | 라이브러리 | 버전(package.json) |
+|---|---|---|
+| 프론트 | react, react-dom | ^19.3.0 |
+| 프론트 | react-router | ^8.4.0 |
+| 프론트 | @tanstack/react-query | ^5.104.0 |
+| 프론트 | zustand (`persist`로 언어·테마 유지) | ^5.0.15 |
+| 프론트 빌드 | vite, typescript | ^8.3.1, ^7.0.2 |
+| 프론트 테스트 | vitest, jsdom, @testing-library/react, @testing-library/dom | ^5.0.3, ^30.1.1, ^16.3.3, ^10.4.2 |
+| 백엔드 | express | ^5.2.1 |
+| 백엔드 | pg | ^8.23.0 |
+| 백엔드 | jsonwebtoken, bcrypt, cors | ^9.0.3, ^6.0.0, ^2.8.6 |
+| API 문서 | Swagger UI (CDN `swagger-ui-dist@5`) | - |
+| DB | PostgreSQL | 17 |
+| 런타임 | Node.js (`engines` 미지정. `--env-file`·`--watch`·`--test-coverage-include` 사용으로 22 이상 필요) | - |
+| E2E | Playwright MCP (수동 실행, `test/e2e`) | - |
 
 ## 2. JWT Access/Refresh Token 재발급 흐름
 
 Access Token 만료 시 Refresh Token으로 재발급하고, 그것도 무효면 로그인 화면으로 보내는 분기가 있어 순서도로 풀었다. (FR-01, BR-01, 시나리오 E-02)
 
 Access Token 15분, Refresh Token 7일이며 둘 다 클라이언트 `localStorage`에 저장한다. 서버는 Refresh Token을 저장·폐기하지 않는 무상태이고, 로그아웃은 클라이언트 토큰 삭제다. (8-plan §5)
+
+클라이언트는 `/api/auth/*` 외 요청이 401이면 재발급을 1회 시도한다. 재발급 응답에는 새 Access Token만 있고 Refresh Token은 갱신하지 않는다. 재발급에 실패하면 토큰을 지우고 `/login`으로 이동한다.
 
 ```mermaid
 sequenceDiagram
@@ -53,7 +82,7 @@ sequenceDiagram
             S-->>C: "정상 응답"
         else "Refresh Token 만료/무효"
             S-->>C: "인증 실패 응답"
-            C->>C: "로그인 화면으로 이동 (BR-01)"
+            C->>C: "토큰 삭제 후 /login 이동 (BR-01)"
         end
     end
 ```
@@ -62,7 +91,7 @@ sequenceDiagram
 
 상태는 저장하지 않고 서버가 위에서 아래 순서로 계산하며, 먼저 일치하는 상태를 적용한다. 순서가 바뀌면 결과가 달라지고 필터(SQL)와도 일치해야 해서 추가했다. (FR-06, FR-07, BR-08, 도메인 §3 '할일 상태')
 
-'오늘'은 KST 기준이며 서버에서만 산출한다.
+상태 판단용 '오늘'은 KST 기준이며 서버에서만 산출한다. 프론트는 표시·입력 기본값(BR-05 초기 날짜, 캘린더 초기 월·오늘 강조)에만 KST 날짜를 계산한다.
 
 ```mermaid
 flowchart TD
@@ -90,6 +119,7 @@ flowchart TD
 | 캘린더 탭 조회 API | 전용 API 없이 필터 없는 `GET /api/todos` |
 | API 문서 | `/api-docs` Swagger UI(CDN 로드), 개발 환경만 |
 | 프론트 빌드 도구·라우터 라이브러리 | Vite, react-router |
+| 다국어·다크 모드 | 라이브러리 없이 프론트에서만 처리(`i18n.ts` 사전, `<html data-theme>` + CSS 토큰 재정의). 백엔드 변경 없음 |
 | 저장소 내 `frontend/`·`backend/`와 기존 `team-caltalk/` 폴더의 관계 | 루트에 새로 만들고 `team-caltalk/`는 수정하지 않음 |
 
 ## 5. 변경 이력
@@ -101,3 +131,4 @@ flowchart TD
 | 1.2 | 2026-09-30 | leejs05031119@gmail.com | ERD 삭제 (별도 문서로 작성 예정) |
 | 1.3 | 2026-09-30 | leejs05031119@gmail.com | 8-plan §5 미정 항목 결정 반영 |
 | 1.4 | 2026-10-01 | leejs05031119@gmail.com | Swagger UI(`/api-docs`, 개발 환경만) 반영 |
+| 1.5 | 2026-10-02 | leejs05031119@gmail.com | 구현 반영: §1 다이어그램에 api/client.ts·cors/json·errorHandler·`/api/auth/*` 인증 제외 경로 추가, §1.1 기술 스택 표 추가, §2 재발급 조건·Refresh Token 미갱신·실패 처리, §3 프론트 KST 표시 예외, §4 다국어·다크 모드 |

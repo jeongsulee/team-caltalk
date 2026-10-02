@@ -11,7 +11,7 @@
 | 1-3 | 단일 진실 원천: 비즈니스 규칙은 백엔드 서비스 계층 한 곳에서만 판단한다. 프론트는 UX용 사전 검증만 하고 최종 판단은 서버 응답을 따른다. | 규칙이 두 곳에 있으면 어긋난다. |
 | 1-4 | 할일 상태는 저장하지 않고 서버가 계산해 응답의 `status` 필드로 내려준다. 판단 함수는 백엔드에 1개만 둔다. 프론트는 재계산하지 않는다. | 도메인 §3 "상태는 저장하지 않는다" + BR-08(KST) 중복 구현 방지. |
 | 1-5 | 상태 필터(FR-07)는 SQL WHERE 조건으로 구현하되, 조건은 1-4의 판단 순서(완료 → 기한 초과 → 시작 전 → 진행중)와 동일해야 한다. 이를 테스트로 고정한다(§4). | 두 구현이 갈라질 수 있는 유일한 지점. |
-| 1-6 | '오늘'은 KST 날짜(BR-08)이며 서버에서만 산출한다. 클라이언트 시계·타임존에 의존하지 않는다. | 클라이언트마다 날짜가 다르면 상태가 달라진다. |
+| 1-6 | 상태 판단용 '오늘'은 KST 날짜(BR-08)이며 서버에서만 산출한다. 프론트는 표시·입력 기본값(BR-05 초기 날짜, 캘린더 초기 월, 오늘 강조)에만 `Intl.DateTimeFormat`(`Asia/Seoul`)으로 KST 날짜를 쓴다. | 클라이언트마다 날짜가 다르면 상태가 달라진다. |
 | 1-7 | 날짜(시작·종료일자)는 시각 없는 `YYYY-MM-DD` 문자열/DATE 타입으로만 다룬다. | 타임존 변환 버그 방지. |
 | 1-8 | 미정 항목은 임의로 결정해 구현하지 않는다. 필요하면 코드에 `// 미정: <항목>` 주석만 남기고 §7을 갱신한다. | 문서와 구현의 불일치 방지. |
 | 1-9 | 수치(토큰 만료, 풀 크기 등)를 코드에 하드코딩하지 않고 환경변수로 받는다(§5). 확정 값은 `.env.example`에 예시로 둔다. | 지어낸 값이 사실처럼 굳는 것을 막는다. |
@@ -48,13 +48,14 @@ pages  →  components  →  hooks(TanStack Query)  →  api  →  (fetch)
 | 레이어 | 책임 |
 |---|---|
 | pages | WF 화면 1개 = 페이지 1개. 라우팅 단위, 훅·컴포넌트 조립 |
-| components | 표시 전용 UI. 서버 호출 금지, props로만 데이터 수신 |
+| components | 표시 전용 UI. 서버 호출 금지, props로만 데이터 수신. 단, 공통 헤더(`Header.tsx`)는 로그아웃 훅·언어/테마 스토어를 직접 사용한다 |
 | hooks | TanStack Query `useQuery`/`useMutation` 래핑. 서버 상태의 유일한 창구 |
 | api | 백엔드 REST 호출 함수와 요청/응답 타입. 토큰 첨부·재발급 처리 |
 | stores | Zustand. 서버와 무관한 UI 상태만 (필터 선택값, 활성 탭, 현재 월, 언어, 테마 등) |
+| 공통 모듈 | `i18n.ts`(사전·`useT`, `uiStore.lang` 참조)와 `constants.ts`는 pages·components가 함께 쓴다 |
 
 - 상태 구분(PRD §6): 서버 데이터는 TanStack Query만, UI 상태는 Zustand만 사용한다. 서버 데이터를 Zustand에 복사하지 않는다. (이유: 캐시 이중화 방지)
-- 금지: components에서 `api` 직접 import, `api`에서 store/컴포넌트 import, 페이지 간 import.
+- 금지: components에서 `api` 직접 import, `api`에서 store/컴포넌트 import, 페이지 간 import(예외: `TodoListPage`가 탭 내용인 `TodoCalendarView`를 렌더링).
 - 필터 값은 Zustand에 두고 쿼리 키에 포함해 서버에 전달한다. 필터링은 서버(FR-07)가 수행하며 클라이언트에서 다시 거르지 않는다.
 - 인증: Refresh Token까지 만료되면 로그인 화면으로 이동(BR-01, E-02)하는 처리를 `api` 계층 한 곳에서 한다.
 
@@ -104,6 +105,9 @@ pages  →  components  →  hooks(TanStack Query)  →  api  →  (fetch)
   | `NOT_FOUND` | 404 | 존재하지 않거나 타인 소유인 리소스(BR-02) |
   | `EMAIL_DUPLICATED` | 409 | 가입 시 이메일 중복(BR-07) |
   | `CATEGORY_NAME_DUPLICATED` | 409 | 같은 사용자 안의 카테고리 이름 중복(BR-11) |
+  | `INTERNAL_ERROR` | 500 | 예상치 못한 서버 오류(응답에 스택·SQL 미노출) |
+
+  - 잘못된 JSON 본문도 400 `VALIDATION_ERROR`다. 프론트는 오류 본문이 없으면(네트워크 오류 등) `UNKNOWN`으로 처리한다.
 
 ## 4. 테스트/품질 원칙
 
@@ -119,6 +123,7 @@ pages  →  components  →  hooks(TanStack Query)  →  api  →  (fetch)
 | 4-8 | 테스트 범위: 백엔드는 상태 판단·서비스 규칙·API 통합(실제 PostgreSQL 테스트 DB), 프론트는 폼 검증(BR-04 오류 표시)·필터 상태 전환 위주. 나머지 화면 렌더링 테스트는 만들지 않는다. | 2일 일정에서 위험이 큰 곳에 집중. |
 | 4-9 | 테스트 러너는 백엔드 `node --test`, 프론트 Vitest + Testing Library. 백엔드는 `npm run test:coverage`에서 `src/` 라인 커버리지 90% 미만이면 실패한다. 프론트는 커버리지 수치 목표가 없다. | 확정(§7). |
 | 4-10 | 접근성 검증은 하지 않는다(PRD §8). | 범위 제외. |
+| 4-11 | E2E 통합 테스트는 `test/e2e/`에서 개발 서버를 띄우고 Playwright MCP로 시나리오 S/E 전체를 수동 실행해 `test-report.md`에 결과·스크린샷을 남긴다. 데이터는 `node test/e2e/setup.mjs`가 API로 고유 계정을 만든다(DB TRUNCATE 하지 않음). | 기존 개발 데이터를 지우지 않고 화면 단위 동작을 확인한다 (8-plan QA-01). |
 
 ## 5. 설정/보안/운영 원칙
 
@@ -133,11 +138,12 @@ pages  →  components  →  hooks(TanStack Query)  →  api  →  (fetch)
 ### 5.2 인증 (JWT: Access Token + Refresh Token)
 - 로그인 성공 시 두 토큰을 발급하고, API 요청마다 Access Token을 검증한다. 만료 시 Refresh Token으로 재발급하며, Refresh Token도 무효면 로그인 화면으로 이동한다(PRD §6, BR-01, E-02).
 - Access/Refresh는 서로 다른 시크릿으로 서명한다. (이유: 한쪽 유출 시 다른 쪽 보호)
+- HS256으로 서명하고 payload에는 `sub`(사용자 id)만 담는다. 재발급(`/api/auth/refresh`)은 Access Token만 새로 발급하며 Refresh Token은 갱신하지 않으므로 로그인 7일 후에는 다시 로그인해야 한다. 클라이언트는 `/api/auth/*` 외 요청이 401이면 재발급을 1회 시도한다.
 - Access Token 15분, Refresh Token 7일. 두 토큰 모두 `localStorage`에 저장하고 접근은 `client.ts` 한 곳에서만 한다(XSS 노출 위험은 수용). 서버는 Refresh Token을 저장·폐기하지 않는 무상태이며, 로그아웃은 클라이언트 토큰 삭제다.
 - 보호 라우트는 모두 인증 미들웨어를 거친다. 공개 API는 `/api/auth/signup`, `/api/auth/login`, `/api/auth/refresh`뿐이다. (API 문서 `/api-docs`는 개발 환경에서만 인증 없이 제공한다, §5.6)
 
 ### 5.3 비밀번호
-- 평문 저장·로깅 금지. 단방향 해시(솔트 포함, bcrypt)로만 저장한다. 비용 인자는 라이브러리 기본값.
+- 평문 저장·로깅 금지. 단방향 해시(솔트 포함, bcrypt)로만 저장한다. 비용 인자는 10(코드에 고정).
 - 비밀번호 정책(길이·복잡도)은 범위 제외이므로 구현하지 않는다(도메인 §5).
 - 로그인 실패 시 이메일·비밀번호를 구분하지 않고 "이메일 또는 비밀번호가 올바르지 않습니다."로 안내한다(E-02).
 - 응답·로그에 비밀번호 해시를 포함하지 않는다.
@@ -156,9 +162,9 @@ pages  →  components  →  hooks(TanStack Query)  →  api  →  (fetch)
 
 ### 5.6 기타 운영
 - 입력 검증은 routes에서 형식(필수값, 날짜 형식)을, services에서 규칙(BR-04)을 수행한다. 프론트 검증은 UX용이다.
-- 오류 로그에 비밀번호·토큰 원문을 남기지 않는다. 로깅 도구·모니터링·배포 환경은 이번 범위 외.
+- 오류 로그에 비밀번호·토큰 원문을 남기지 않는다. 백엔드는 예상치 못한 오류만 `console.error`로 출력하고, 환경변수는 누락된 키 이름만 출력한다. 프론트는 개발 모드(`import.meta.env.DEV`)에서만 API 오류를 콘솔에 남긴다. 로깅 도구·모니터링·배포 환경은 이번 범위 외.
 - CORS는 `CORS_ORIGIN`에 지정한 출처만 허용한다.
-- DB 마이그레이션 도구는 쓰지 않는다. 스키마는 `backend/src/db/schema.sql` 한 파일로 관리한다(ORM 금지, 마이그레이션 도구 불필요한 규모).
+- DB 마이그레이션 도구는 쓰지 않는다. 스키마 원본은 `backend/src/db/schema.sql` 한 파일이며 `docs/schema.sql`은 같은 내용의 문서용 사본이다(ORM 금지, 마이그레이션 도구 불필요한 규모).
 - API 명세는 `backend/swagger.yaml`(OpenAPI 3.0) 한 파일로 관리하고, `/api-docs`에서 Swagger UI로, `/api-docs/swagger.yaml`에서 원본으로 제공한다. Swagger UI는 CDN(`swagger-ui-dist@5`)에서 로드해 npm 의존성을 추가하지 않는다. `NODE_ENV=production`이면 등록하지 않는다(404). 명세의 서버 주소 기본 포트는 `3000`이다.
 
 ## 6. 디렉토리 구조
@@ -200,7 +206,11 @@ frontend/
 │  │  ├─ todoApi.ts               # /api/todos
 │  │  └─ categoryApi.ts           # /api/categories
 │  ├─ i18n.ts                     # 다국어 사전(ko, en)·useT(): 화면 문구, 상태 라벨, error.code → 문구
-│  └─ constants.ts                # '기본' 카테고리 이름 상수
+│  ├─ constants.ts                # '기본' 카테고리 이름 상수
+│  └─ index.css                   # 유일한 스타일 파일 (색 토큰, 다크 테마, 반응형)
+├─ index.html
+├─ vite.config.ts                 # Vite + Vitest 설정 (jsdom, css: true)
+├─ CLAUDE.md                      # 프론트엔드 작업 지침
 ├─ .env.example                   # 프론트 환경변수 키 목록
 ├─ package.json
 └─ tsconfig.json
@@ -209,6 +219,7 @@ frontend/
 - 테스트 파일은 대상 파일 옆 `*.test.tsx`(`*.test.ts`)에 두고 러너는 Vitest + Testing Library다. (`pages/TodoFormPage.test.tsx`, `stores/uiStore.test.ts`, `i18n.test.ts`, `theme.test.tsx`)
 - 다국어: 컴포넌트는 `useT()`로 현재 언어 사전을 받는다. props만 받는 컴포넌트(`TodoItem`, `TodoFilters`)는 사전을 props로 받는다. 서버 오류는 한국어에서 서버 `message`를 그대로, 영어에서 `error.code`로 번역한다(모르는 code는 원문). 사용자 데이터는 번역하지 않되, '기본' 카테고리는 영어에서 표시만 'Default'로 바꾼다(식별은 이름 '기본' 그대로, BR-10).
 - 테마: `App.tsx`가 `uiStore.theme`을 `<html data-theme>`에 반영하고, `index.css`의 `:root[data-theme='dark']`가 같은 색 토큰을 다시 정의한다. 컴포넌트와 CSS 규칙은 색 값 대신 토큰만 참조한다(스타일 가이드 §2.4).
+- `App.tsx`는 `uiStore.lang`을 `<html lang>`에도 반영한다.
 - 캘린더 탭은 WF-04와 같은 화면의 탭이므로 `TodoListPage`가 탭을 전환하며 `TodoCalendarView`를 렌더링한다.
 
 ### 6.2 백엔드
@@ -255,7 +266,17 @@ backend/
 ├─ swagger.yaml                   # REST API 명세 (OpenAPI 3.0)
 ├─ .env.example                   # 백엔드 환경변수 키 목록
 ├─ .env.test                      # 테스트 DB용 환경변수 (DB 이름 *_test)
+├─ CLAUDE.md                      # 백엔드 작업 지침
 └─ package.json                   # scripts: dev, test, test:coverage, seed
+```
+
+### 6.3 E2E 테스트
+
+```
+test/e2e/
+├─ setup.mjs                      # API로 고유 계정·공통 테스트 데이터 생성 (DB를 비우지 않음)
+├─ test-report.md                 # 시나리오별 결과·발견 결함 (QA-01)
+└─ screenshots/                   # 주요 화면·엣지케이스 캡처
 ```
 
 - 한 도메인은 routes/services/repositories에 같은 접두사 파일 1개씩 대응한다. (인증·내 정보·할일·카테고리)
@@ -276,16 +297,16 @@ backend/
 | 타인 리소스 접근 거부 시 HTTP 상태 코드 | 404 |
 | 캘린더 탭 조회 API, 여러 날에 걸친 할일 표시 방식 | 전용 API 없이 필터 없는 `GET /api/todos`. 시작~종료 각 날짜 셀에 제목 표시, 필터 없음. 날짜 클릭 시 해당 일 할일을 팝업(`<dialog>`)으로 표시 |
 | 완료 처리 방식, 되돌림 가능 여부 | `PATCH /api/todos/:id`의 `isCompleted`, 목록 체크박스 토글, 되돌림 가능(BR-12) |
-| 오류 응답 형식, 상태 코드 영문 값, error.code 값 | `{ error: { code, message } }`, `upcoming`/`in_progress`/`completed`/`overdue`, error.code 7종(§3) |
+| 오류 응답 형식, 상태 코드 영문 값, error.code 값 | `{ error: { code, message } }`, `upcoming`/`in_progress`/`completed`/`overdue`, error.code 7종 + 500 `INTERNAL_ERROR`(§3) |
 | 환경변수 이름, API 경로 이름 | §5.1, §3의 이름으로 확정 |
 | 테스트 러너, 커버리지 목표 | 백엔드 `node --test`(라인 커버리지 90% 기준, `npm run test:coverage`), 프론트 Vitest + Testing Library(목표 없음) |
 | API 문서 | `backend/swagger.yaml`을 `/api-docs` Swagger UI로 제공, CDN 로드, `NODE_ENV=production`이면 미등록 |
-| 프론트 빌드 도구, 라우터 라이브러리, 비밀번호 해시 라이브러리 | Vite, react-router, bcrypt(기본 비용 인자) |
+| 프론트 빌드 도구, 라우터 라이브러리, 비밀번호 해시 라이브러리 | Vite, react-router, bcrypt(비용 인자 10) |
 | 마이그레이션 방식 | `backend/src/db/schema.sql` 단일 파일 |
 | 저장소 내 `frontend/`·`backend/`와 기존 `team-caltalk/` 폴더의 관계 | 루트에 새로 만들고 `team-caltalk/`는 수정하지 않음 |
 | 삭제 확인 절차, 빈 결과 표시, 내 정보 수정 항목 범위 | 삭제 전 `window.confirm` 1회, "조건에 맞는 할일이 없습니다.", 이름만 수정 |
 | 이메일 대소문자 | 서비스에서 공백 제거·소문자 정규화(BR-07) |
-| 다국어 | 한국어(기본)·영어, 라이브러리 없이 `i18n.ts` 사전 + `uiStore.lang`(localStorage 유지, 초기값 브라우저 언어). 서버 오류는 `error.code`로 번역, 백엔드 변경 없음 (8-plan FE-15) |
+| 다국어 | 한국어·영어, 라이브러리 없이 `i18n.ts` 사전 + `uiStore.lang`(localStorage 유지, 초기값 브라우저 언어). 서버 오류는 `error.code`로 번역, 백엔드 변경 없음 (8-plan FE-15) |
 | 다크/라이트 모드 | 라이브러리 없이 CSS 토큰 재정의(`:root[data-theme='dark']`) + `uiStore.theme`(localStorage 유지, 초기값 OS 설정 `prefers-color-scheme`). 백엔드 변경 없음 (8-plan FE-16) |
 
 ## 8. 문서 변경 이력
@@ -300,3 +321,5 @@ backend/
 | 1.5 | 2026-10-01 | leejs05031119@gmail.com | 백엔드 구현 반영: Swagger UI(`/api-docs`, 개발 환경만)와 선택 키 `NODE_ENV`(§5.1·5.2·5.6), 백엔드 커버리지 90% 기준(4-9), §6.2에 `docsRoutes.js`·테스트 파일 4개·`swagger.yaml`·`.env.test` 추가, §7 갱신 |
 | 1.6 | 2026-10-01 | leejs05031119@gmail.com | 다국어 반영: 상태 라벨 매핑 위치를 `i18n.ts`로 변경(§3), stores에 언어 추가(§2.2), §6.1에 `i18n.ts`·`LanguageSelect.tsx`·테스트 파일 추가, §7 결정 추가 |
 | 1.7 | 2026-10-01 | leejs05031119@gmail.com | 다크/라이트 모드 반영: stores에 테마 추가(§2.2), §6.1에 `ThemeToggle.tsx`·`theme.test.tsx`와 테마 적용 방식 추가, §7 결정 추가 |
+| 1.8 | 2026-10-02 | leejs05031119@gmail.com | §7 캘린더 날짜 클릭 팝업(`<dialog>`) 반영 |
+| 1.9 | 2026-10-02 | leejs05031119@gmail.com | 구현 반영: 1-6 프론트 KST 표시 예외, §2.2 공통 모듈·Header 예외·페이지 import 예외, §3 `INTERNAL_ERROR`·잘못된 JSON, 4-11 E2E 원칙, §5.2 JWT 세부(HS256·sub·재발급 범위), §5.3 bcrypt 비용 10, §5.6 로깅·schema 사본, §6.1·6.2 파일 추가, §6.3 E2E 구조 추가 |
